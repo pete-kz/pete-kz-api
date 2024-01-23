@@ -6,12 +6,12 @@ import multer from 'multer'
 import AWS from 'aws-sdk'
 import multerS3 from 'multer-s3'
 
-const config = {
+AWS.config.update({
     region: 'eu-central-1',
     accessKeyId: process.env.ACCESS_KEY_ID,
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
-}
-AWS.config.update(config)
+})
+
 const s3 = new AWS.S3()
 
 const upload = multer({

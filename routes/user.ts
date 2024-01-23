@@ -71,7 +71,7 @@ router.post('/register', limit({
 
 router.post('/update', (req, res) => {
     // { query: { _id: 'some_id_here' }, update: { password: 'new_password_hash'} }
-    // @ts-ignore
+    // @ts-ignorep;'[=]-[]
     schema.user.findOneAndUpdate(req.body.query, req.body.update, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         res.json(docs)

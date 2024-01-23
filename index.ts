@@ -72,6 +72,10 @@ app.get('/api', (req, res) => {
   res.send('Hello from Petinder API!')
 })
 
+app.get('/', (req, res) => {
+  res.send('Hello from Petinder API!')
+})
+
 app.listen(port, () => {
   db.once('open', _ => {
     const API = { name: 'API_PORT', value: port }
