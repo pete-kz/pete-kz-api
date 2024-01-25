@@ -61,8 +61,8 @@ mongooseConnect().catch(err => console.log(err))
 const db = mongoose.connection
 
 // importing routes
-import userRoute from './routes/user'
-import petRoute from './routes/pet'
+import userRoute from './routes/user.js'
+import petRoute from './routes/pet.js'
 
 // express routes setup
 app.use('/pets', petRoute)
