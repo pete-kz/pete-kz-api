@@ -1,11 +1,11 @@
 import { Router } from "express"
 import bcrypt from 'bcrypt'
 const router = Router()
-import schema from '../models'
+import schema from '../models/index.js'
 import jwt from 'jsonwebtoken'
 
 import { limit } from 'express-limit'
-import errors from '../config/errors'
+import errors from '../config/errors.js'
 
 router.post('/login', limit({
     max: 5,        // 5 requests

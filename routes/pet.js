@@ -1,7 +1,7 @@
 import { Router } from 'express'
 const router = Router()
-import schema from '../models'
-import errors from '../config/errors'
+import schema from '../models/index.js'
+import errors from '../config/errors.js'
 import multer from 'multer'
 import AWS from 'aws-sdk'
 import multerS3 from 'multer-s3'
