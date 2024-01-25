@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 const router = Router()
 import schema from '../models'
 import jwt from 'jsonwebtoken'
-// @ts-expect-error
+
 import { limit } from 'express-limit'
 import errors from '../config/errors'
 
@@ -12,7 +12,7 @@ router.post('/login', limit({
     period: 60 * 1000 // per minute (60 seconds)
 }), (req, res) => {
     const login = req.body.login
-    // @ts-ignore
+    
     schema.user.findOne({ login }, (err, docs) => {
         if (err) { throw err }
         if (docs == null) {
@@ -27,8 +27,8 @@ router.post('/login', limit({
                     _id: docs._id,
                     login: docs.login
                 }
-                let token = jwt.sign(updatedDocs, process.env.SECRET as string)
-                // @ts-ignore
+                let token = jwt.sign(updatedDocs, process.env.SECRET)
+                
                 schema.user.findOneAndUpdate({ _id: docs._id }, { token }, (err, docs) => {
                     if (err) { res.json(errors.internalError).status(500) }
                     res.json({
@@ -59,7 +59,7 @@ router.post('/register', limit({
                 login: req.body.login,
                 password: hash.toString(),
             })
-            // @ts-ignore
+            
             userNew.save((err, docs) => {
                 if (err) { return res.json(errors.accExists).status(403) }
                 res.json(docs)
@@ -71,7 +71,7 @@ router.post('/register', limit({
 
 router.post('/update', (req, res) => {
     // { query: { _id: 'some_id_here' }, update: { password: 'new_password_hash'} }
-    // @ts-ignorep;'[=]-[]
+
     schema.user.findOneAndUpdate(req.body.query, req.body.update, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         res.json(docs)
@@ -80,7 +80,7 @@ router.post('/update', (req, res) => {
 
 router.post('/find', (req, res) => {
     // { query: { token: 'some_token_here' } }
-    // @ts-ignore
+    
     schema.user.findOne(req.body.query, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }
@@ -89,7 +89,7 @@ router.post('/find', (req, res) => {
 })
 
 router.post('/remove', (req, res) => {
-    // @ts-ignore
+    
     schema.user.findByIdAndDelete(req.body.query, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }
@@ -99,7 +99,7 @@ router.post('/remove', (req, res) => {
 
 router.post('/find/all', (req, res) => {
     // { query: { token: 'some_token_here' } }
-    // @ts-ignore
+    
     schema.user.find({}, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }

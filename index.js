@@ -84,7 +84,7 @@ app.listen(port, () => {
     // const ACCESS_KEY_ID = { name: 'ACCESS_KEY_ID', value: security.accessKeyId }
     // const SECRET_ACCESS_KEY = { name: 'SECRET_ACCESS_KEY', value: security.secretAccessKey }
     const array = [API, MONGODB, SECRET]
-    //@ts-expect-error
+    
     const transformed = array.reduce((acc, {name, ...x}) => { acc[name] = x; return acc}, {})
     console.table(transformed)
   })

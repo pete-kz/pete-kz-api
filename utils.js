@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken'
 
 export default {
     middlewares: {
-        // @ts-expect-error
+        
         authenticate: (req, res, next) => {
             // Retrieve token from header
             const authorizationHeader = req.headers['authorization']
@@ -21,8 +21,8 @@ export default {
             // Token exists then validate to provide access or not
             else if (token && !validator.isEmpty(token)) {
                 // Validate token with the secret
-                // @ts-expect-error
-                jwt.verify(token, process.env.SECRET as string, (err, decoded) => {
+                
+                jwt.verify(token, process.env.SECRET, (err, decoded) => {
                     if (err) {
                         res.status(401).json({ err: 'Чтобы выполнить это действие, выполните вход.' })
                         res.end()
@@ -37,7 +37,7 @@ export default {
                 res.end()
             }
         },
-        // @ts-expect-error
+        
         logger: (req, res, next) => {
             console.log(req.ip, req.method, req.originalUrl)
             next()
