@@ -34,7 +34,7 @@ const upload = multer({
 
 router.post('/find', (req, res) => {
     
-    schema.pet.find(req.body.query || {}, (err, docs) => {
+    schema.pet.find(req.body.query || {}).then((docs, err) => {
         if (err) { return res.json(errors.internalError).status(500) }
         if (docs) { res.json(docs) }
     })
@@ -47,10 +47,11 @@ router.post('/add', upload.single('image'), (req, res) => {
     if (req.file != undefined) imagePath = req.file?.location
     const requestBody = {
         name: req.body.name,
+        age: req.body.age,
         type: req.body.type,
         description: req.body.description,
         userID: req.body.userID,
-        imagePath,
+        imagesPath: [imagePath],
         city: req.body.city,
     }
     const newPet = new schema.pet(requestBody)
@@ -63,8 +64,7 @@ router.post('/add', upload.single('image'), (req, res) => {
 
 // Remove existing pet
 router.post('/remove', (req, res) => {
-    // { query: { id } }
-    
+
     schema.pet.findOneAndDelete(req.body.query, (err, docs) => {
         if (err) { return res.json(errors.internalError).status(500) }
         res.json(docs)
@@ -74,8 +74,7 @@ router.post('/remove', (req, res) => {
 // Edit existing pet
 router.post('/edit', (req, res) => {
     // { query: { id }, updated: { address: ryskulova } }
-    
-    schema.pet.findOneAndUpdate(req.body.query, req.body.updated, (err, docs) => {
+    schema.pet.findOneAndUpdate(req.body.query, req.body.updated).then((docs, err) => {
         if (err) { return res.json(errors.internalError).status(500) }
         else { res.json(docs) }
     })

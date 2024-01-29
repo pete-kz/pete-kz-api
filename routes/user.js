@@ -13,7 +13,7 @@ router.post('/login', limit({
 }), (req, res) => {
     const login = req.body.login
     
-    schema.user.findOne({ login }, (err, docs) => {
+    schema.user.findOne({ login }).then((docs, err) => {
         if (err) { throw err }
         if (docs == null) {
             return res.json(errors.accNotFound)
@@ -28,8 +28,7 @@ router.post('/login', limit({
                     login: docs.login
                 }
                 let token = jwt.sign(updatedDocs, process.env.SECRET)
-                
-                schema.user.findOneAndUpdate({ _id: docs._id }, { token }, (err, docs) => {
+                schema.user.findOneAndUpdate({ _id: docs._id }, { token }).then((docs, err) => {
                     if (err) { res.json(errors.internalError).status(500) }
                     res.json({
                         token,
@@ -39,7 +38,7 @@ router.post('/login', limit({
                 })
             }
         })
-    })
+    }).catch(e => console.log(e))
 })
 
 router.post('/register', limit({
@@ -53,14 +52,16 @@ router.post('/register', limit({
     bcrypt.genSalt(saltRounds, function (err, salt) {
         if (err) { return res.json(errors.internalError).status(500) }
         bcrypt.hash(password, salt, function (err, hash) {
+
             if (err) { return res.json(errors.internalError).status(500) }
             // create new user
             const userNew = new schema.user({
                 login: req.body.login,
                 password: hash.toString(),
+                social: { phone: req.body.social.phone }
             })
             
-            userNew.save((err, docs) => {
+            userNew.save().then((docs, err) => {
                 if (err) { return res.json(errors.accExists).status(403) }
                 res.json(docs)
             })
@@ -81,7 +82,7 @@ router.post('/update', (req, res) => {
 router.post('/find', (req, res) => {
     // { query: { token: 'some_token_here' } }
     
-    schema.user.findOne(req.body.query, (err, docs) => {
+    schema.user.findOne(req.body.quer || {}).then((docs, err) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }
         else { res.json(docs) }

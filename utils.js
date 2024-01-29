@@ -1,6 +1,7 @@
 
 import validator from 'validator'
 import jwt from 'jsonwebtoken'
+import { response } from 'express'
 
 export default {
     middlewares: {
@@ -13,8 +14,8 @@ export default {
             // Get received token
             if (authorizationHeader) token = authorizationHeader.split(' ')[1]
             // Paths whitelist
-            const pathsWhitelists = ['/auth']
-            // Bypass authorization middleware if path includes "auth"
+            const pathsWhitelists = ['/users/login', '/users/register']
+            // Bypass authorization middleware if path includes "auth" or it ends with api (for testing purposes)
             if (pathsWhitelists.includes(req.path)) {
                 next()
             }
@@ -28,7 +29,7 @@ export default {
                         res.end()
                     } else {
                         // Suggest - You can check database here if you want to save it
-
+                        
                         next() // Let de request proceed to it's endpoint naturally
                     }
                 })

@@ -3,25 +3,31 @@ import mongoose from 'mongoose'
 // Pet's schema
 const petSchema = new mongoose.Schema({
     name: { type: String }, // name of the pet
-    type: { type: String },
-    description: { type: String, default: '' },
-    userID: { type: String },
-    imagePath: { type: String, default: '' },
+    age: { type: String },
+    type: { type: String, enum: ['Cat', 'Dog', 'Other'] },
+    description: { type: String, default: '' }, // short description of pet
+    userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    imagesPath: [{ type: String }],
     city: { type: String, default: '' }
 })
 
 // User's schema
 const userSchema = new mongoose.Schema({
     login: { type: String, unique: true },
+    social: {
+        telegram: { type: String, default: '' },
+        instagram: { type: String, default: '' },
+        phone: { type: String, unique: true }
+    },
     password: { type: String, default: '' },
+    liked: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
     token: { type: String, default: '' }
 })
 
 // Config schema
 const configSchema = new mongoose.Schema({
-    admins: { type: Array, default: []},
-    name: { type: String, default: 'SafeZone Finder'},
-    version: { type: String, default: 'v1.0.0'}
+    admins: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: []},
+    name: { type: String, default: 'Petinder'},
 })
 
 export default {

@@ -11,13 +11,10 @@ const port = process.env.EXPRESS_PORT || 3000
 const middlewares = utils.middlewares
 
 const whitelist = [
-  'http://kz.allymap.info',
-  'https://kz.allymap.info',
   'http://localhost:5173',
   'http://localhost:4173',
-  'http://192.168.1.72:4173',
-  'http://192.168.1.72:5173',
-  'hammerhead-app-q63fx.ondigitalocean.app'
+  'http://192.168.1.157:4173',
+  'http://192.168.1.157:5173',
 ]
 app.use(cors({
   origin: (origin, callback) => {
