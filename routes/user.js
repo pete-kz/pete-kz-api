@@ -70,10 +70,21 @@ router.post('/register', limit({
     })
 })
 
-router.post('/update', (req, res) => {
+router.post('/update/:id', (req, res) => {
     // { query: { _id: 'some_id_here' }, update: { password: 'new_password_hash'} }
+    const user_id = req.params.id
+    // check if update contains updated password, if yes then hash it and replace naked password in request body's field "password"
+    if (req.body.update.password) {
+        bcrypt.genSalt(10, function (err, salt) {
+            if (err) { return res.json(errors.internalError).status(500) }
+            bcrypt.hash(password, salt, function (err, hash) {
+                if (err) { return res.json(errors.internalError).status(500) }
+                req.body.password = hash.toString()
+            })
+        })
+    } 
 
-    schema.user.findOneAndUpdate(req.body.query, req.body.update, (err, docs) => {
+    schema.user.findByIdAndUpdate(user_id, req.body.update).then((docs, err) => {
         if (err) { res.json(errors.internalError).status(500) }
         res.json(docs)
     })
@@ -82,7 +93,7 @@ router.post('/update', (req, res) => {
 router.post('/find', (req, res) => {
     // { query: { token: 'some_token_here' } }
     
-    schema.user.findOne(req.body.quer || {}).then((docs, err) => {
+    schema.user.findOne(req.body.query || {}).then((docs, err) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }
         else { res.json(docs) }
@@ -92,16 +103,6 @@ router.post('/find', (req, res) => {
 router.post('/remove', (req, res) => {
     
     schema.user.findByIdAndDelete(req.body.query, (err, docs) => {
-        if (err) { res.json(errors.internalError).status(500) }
-        else if (docs == null) { res.json(errors.internalError).status(500) }
-        else { res.json(docs) }
-    })
-})
-
-router.post('/find/all', (req, res) => {
-    // { query: { token: 'some_token_here' } }
-    
-    schema.user.find({}, (err, docs) => {
         if (err) { res.json(errors.internalError).status(500) }
         else if (docs == null) { res.json(errors.internalError).status(500) }
         else { res.json(docs) }

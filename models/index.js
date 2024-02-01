@@ -8,8 +8,9 @@ const petSchema = new mongoose.Schema({
     description: { type: String, default: '' }, // short description of pet
     userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     imagesPath: [{ type: String }],
-    city: { type: String, default: '' }
-})
+    city: { type: String, default: '' },
+    datePublished: { type: Date, default: Date.now }
+}, { timestamps: true })
 
 // User's schema
 const userSchema = new mongoose.Schema({
@@ -21,8 +22,9 @@ const userSchema = new mongoose.Schema({
     },
     password: { type: String, default: '' },
     liked: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
+    skipped: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
     token: { type: String, default: '' }
-})
+}, { timestamps: true })
 
 // Config schema
 const configSchema = new mongoose.Schema({
