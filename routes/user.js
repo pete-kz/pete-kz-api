@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt'
 const router = Router()
 import schema from '../models/index.js'
 import jwt from 'jsonwebtoken'
-
 import { limit } from 'express-limit'
 import errors from '../config/errors.js'
 
@@ -11,9 +10,9 @@ router.post('/login', limit({
     max: 5,        // 5 requests
     period: 60 * 1000 // per minute (60 seconds)
 }), (req, res) => {
-    const login = req.body.login
+    const phone = req.body.phone
     
-    schema.user.findOne({ login }).then((docs, err) => {
+    schema.user.findOne({ phone }).then((docs, err) => {
         if (err) { throw err }
         if (docs == null) {
             return res.json(errors.accNotFound)
@@ -25,17 +24,21 @@ router.post('/login', limit({
             if (result) {
                 let updatedDocs = {
                     _id: docs._id,
-                    login: docs.login
+                    login: docs.login,
+                    phone: docs.phone
                 }
                 let token = jwt.sign(updatedDocs, process.env.SECRET)
                 schema.user.findOneAndUpdate({ _id: docs._id }, { token }).then((docs, err) => {
                     if (err) { res.json(errors.internalError).status(500) }
+
                     res.json({
                         token,
                         docs: updatedDocs,
-                        expiresIn: 360
+                        expiresIn: 3600
                     })
                 })
+            } else {
+                res.json(errors.accNotFound)
             }
         })
     }).catch(e => console.log(e))
@@ -57,8 +60,9 @@ router.post('/register', limit({
             // create new user
             const userNew = new schema.user({
                 login: req.body.login,
+                name: req.body.name,
                 password: hash.toString(),
-                social: { phone: req.body.social.phone }
+                phone: req.body.phone
             })
             
             userNew.save().then((docs, err) => {
@@ -92,10 +96,10 @@ router.post('/update/:id', (req, res) => {
 
 router.post('/find', (req, res) => {
     // { query: { token: 'some_token_here' } }
-    
     schema.user.findOne(req.body.query || {}).then((docs, err) => {
-        if (err) { res.json(errors.internalError).status(500) }
-        else if (docs == null) { res.json(errors.internalError).status(500) }
+        if (err || !docs) { 
+            res.json(errors.internalError).status(500) 
+        }
         else { res.json(docs) }
     })
 })

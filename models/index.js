@@ -9,20 +9,19 @@ const petSchema = new mongoose.Schema({
     userID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     imagesPath: [{ type: String }],
     city: { type: String, default: '' },
-    datePublished: { type: Date, default: Date.now }
 }, { timestamps: true })
 
 // User's schema
 const userSchema = new mongoose.Schema({
     login: { type: String, unique: true },
+    name: { type: String },
+    phone: { type: String, unique: true },
     social: {
         telegram: { type: String, default: '' },
         instagram: { type: String, default: '' },
-        phone: { type: String, unique: true }
     },
     password: { type: String, default: '' },
     liked: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
-    skipped: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
     token: { type: String, default: '' }
 }, { timestamps: true })
 
