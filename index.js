@@ -17,6 +17,11 @@ const whitelist = [
   'http://192.168.1.157:5173',
   'https://pete-alpha.vercel.app', // Add this line
 ];
+app.use((req, res, next) => {
+  console.log('Incoming request:', req.method, req.url);
+  console.log('Origin:', req.headers.origin);
+  next();
+});
 
 app.use(cors({
   origin: (origin, callback) => {
