@@ -42,6 +42,13 @@ router.post('/find', (req, res) => {
     })
 })
 
+router.get('/find/all', (req, res) => {
+    schema.pet.find({}).then((docs, err) => {
+        if (err) { return res.json(errors.internalError).status(500) }
+        if (docs) { res.json(docs) }
+    })
+})
+
 // Add new pet
 router.post('/add', upload.array('images'), (req, res) => {
     
