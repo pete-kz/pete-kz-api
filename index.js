@@ -17,20 +17,20 @@ const whitelist = [
   'http://192.168.1.157:5173',
 ]
 app.use(cors({
-  origin: (origin, callback) => {
-    callback(null, true)
-    // console.log('--------------------')
-    // console.log(origin)
-    // if (whitelist.indexOf(origin) !== -1 || whitelist.includes(origin)) {
-    //   callback(null, true)
-    // } else {
-    //   if (origin == undefined) {
-    //     callback(null, true)
-    //   } else {
-    //     callback(new Error('Not allowed by CORS'))
-    //   }
-    // }
-  },
+  // origin: (origin, callback) => {
+  //   callback(null, true)
+  //   console.log('--------------------')
+  //   console.log(origin)
+  //   if (whitelist.indexOf(origin) !== -1 || whitelist.includes(origin)) {
+  //     callback(null, true)
+  //   } else {
+  //     if (origin == undefined) {
+  //       callback(null, true)
+  //     } else {
+  //       callback(new Error('Not allowed by CORS'))
+  //     }
+  //   }
+  // },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true
