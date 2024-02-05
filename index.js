@@ -9,6 +9,9 @@ config()
 const app = express()
 const port = process.env.EXPRESS_PORT || 3000
 const middlewares = utils.middlewares
+let reqCount = 0
+let lastTime = Date.now()
+let totalRequestsPerMinute = 0
 
 const whitelist = [
   'http://localhost:5173',
@@ -37,7 +40,26 @@ app.use(cors({
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-// app.use(middlewares.logger)
+app.use((req, res, next) => {
+  console.info(req.headers.origin, req.method, req.url)
+  if (!req.headers.origin.includes('192.168.')) {
+    reqCount++
+    if (Date.now() > (lastTime + 60 * 1000)) {
+      let totalMinutesTake = Math.round((Date.now() - lastTime) / 1000 / 60)
+      console.info(`For the last ${totalMinutesTake} minutes there was ${reqCount} calls.`)
+      let requestsPerMinute = Math.round(reqCount / totalMinutesTake)
+      if (totalRequestsPerMinute == 0) {
+        totalRequestsPerMinute = requestsPerMinute
+      } else {
+        totalRequestsPerMinute = (totalRequestsPerMinute + requestsPerMinute) / 2
+      }
+      console.info(`Average calls per minute: ${totalRequestsPerMinute}`)
+      lastTime = Date.now()
+      reqCount = 0
+    }
+  }
+  next()
+})
 app.use(middlewares.authenticate)
 app.use(helmet.dnsPrefetchControl())
 app.use(helmet.frameguard())

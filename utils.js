@@ -35,11 +35,6 @@ export default {
                 res.status(401).json({ err: "Неавторизованы! Чтобы выполнить это действие, выполните вход." })
                 res.end()
             }
-        },
-        
-        logger: (req, res, next) => {
-            console.log(req.ip, req.method, req.originalUrl)
-            next()
         }
     }
 
