@@ -13,8 +13,6 @@ const middlewares = utils.middlewares
 const whitelist = [
   'http://localhost:5173',
   'http://localhost:4173',
-  'http://192.168.1.157:4173',
-  'http://192.168.1.157:5173',
   'https://pete-alpha.vercel.app', // Add this line
 ]
 app.use((req, res, next) => {
@@ -25,7 +23,7 @@ app.use((req, res, next) => {
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
+    if (!origin || whitelist.indexOf(origin) !== -1 || origin.includes('192.168.1.')) {
       // Allow requests with no origin (like mobile apps or curl requests) and whitelisted origins
       callback(null, true)
     } else {
