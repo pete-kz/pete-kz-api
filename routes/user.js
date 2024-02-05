@@ -112,5 +112,19 @@ router.post('/remove', (req, res) => {
         else { res.json(docs) }
     })
 })
+
+router.delete('/remove/:user_id/liked/:pet_id', (req, res) => {
+    const user_id = req.params.user_id
+    const pet_id = req.params.pet_id
+    schema.user.findById(user_id).then((docs, err) => {
+        if (err) { res.json(errors.internalError).status(500) }
+        docs.password = undefined
+        docs.liked.filter(pet => pet != pet_id)
+        schema.user.findByIdAndUpdate(user_id, docs).then((docs ,err) => {
+            if (err) { res.json(errors.internalError).status(500) }
+            res.json(docs)
+        })
+    })
+})
  
 export default router
