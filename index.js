@@ -18,11 +18,6 @@ const whitelist = [
   'http://localhost:4173',
   'https://pete-alpha.vercel.app', // Add this line
 ]
-app.use((req, res, next) => {
-  console.log('Incoming request:', req.method, req.url)
-  console.log('Origin:', req.headers.origin)
-  next()
-})
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -42,22 +37,21 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use((req, res, next) => {
   console.info(req.headers.origin, req.method, req.url)
-  if (!req.headers.origin.includes('192.168.')) {
-    reqCount++
-    if (Date.now() > (lastTime + 60 * 1000)) {
-      let totalMinutesTake = Math.round((Date.now() - lastTime) / 1000 / 60)
-      console.info(`For the last ${totalMinutesTake} minutes there was ${reqCount} calls.`)
-      let requestsPerMinute = Math.round(reqCount / totalMinutesTake)
-      if (totalRequestsPerMinute == 0) {
-        totalRequestsPerMinute = requestsPerMinute
-      } else {
-        totalRequestsPerMinute = (totalRequestsPerMinute + requestsPerMinute) / 2
-      }
-      console.info(`Average calls per minute: ${totalRequestsPerMinute}`)
-      lastTime = Date.now()
-      reqCount = 0
+  reqCount++
+  if (Date.now() > (lastTime + 60 * 1000)) {
+    let totalMinutesTake = Math.round((Date.now() - lastTime) / 1000 / 60)
+    console.info(`For the last ${totalMinutesTake} minutes there was ${reqCount} calls.`)
+    let requestsPerMinute = Math.round(reqCount / totalMinutesTake)
+    if (totalRequestsPerMinute == 0) {
+      totalRequestsPerMinute = requestsPerMinute
+    } else {
+      totalRequestsPerMinute = (totalRequestsPerMinute + requestsPerMinute) / 2
     }
+    console.info(`Average calls per minute: ${totalRequestsPerMinute}`)
+    lastTime = Date.now()
+    reqCount = 0
   }
+
   next()
 })
 app.use(middlewares.authenticate)
@@ -103,8 +97,8 @@ app.listen(port, () => {
     // const ACCESS_KEY_ID = { name: 'ACCESS_KEY_ID', value: security.accessKeyId }
     // const SECRET_ACCESS_KEY = { name: 'SECRET_ACCESS_KEY', value: security.secretAccessKey }
     const array = [API, MONGODB, SECRET]
-    
-    const transformed = array.reduce((acc, {name, ...x}) => { acc[name] = x; return acc}, {})
+
+    const transformed = array.reduce((acc, { name, ...x }) => { acc[name] = x; return acc }, {})
     console.table(transformed)
   })
   db.on('error', err => {
