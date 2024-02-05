@@ -9,7 +9,7 @@ import multerS3 from 'multer-s3'
 import dotenv from 'dotenv'
 dotenv.config()
 
-const spacesEndpoint = new AWS.Endpoint(process.env.AWS_ENDPOINT);
+const spacesEndpoint = new AWS.Endpoint(process.env.AWS_ENDPOINT)
 const s3 = new AWS.S3({
     endpoint: spacesEndpoint,
     region: 'fra1',
@@ -26,7 +26,7 @@ const upload = multer({
         bucket: 'petinder',
         contentType: multerS3.AUTO_CONTENT_TYPE,
         metadata: function (req, file, cb) {
-            cb(null, { fieldName: file.fieldname });
+            cb(null, { fieldName: file.fieldname })
         },
         key: function (req, file, cb) {
             cb(null, `pet_images/${Date.now().toString()}.${file.originalname.split('.')[1]}`)

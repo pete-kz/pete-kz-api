@@ -113,18 +113,32 @@ router.post('/remove', (req, res) => {
     })
 })
 
-router.delete('/remove/:user_id/liked/:pet_id', (req, res) => {
-    const user_id = req.params.user_id
-    const pet_id = req.params.pet_id
-    schema.user.findById(user_id).then((docs, err) => {
-        if (err) { res.json(errors.internalError).status(500) }
-        docs.password = undefined
-        docs.liked.filter(pet => pet != pet_id)
-        schema.user.findByIdAndUpdate(user_id, { liked: docs.liked || undefined }).then((docs ,err) => {
-            if (err) { res.json(errors.internalError).status(500) }
-            res.json(docs)
-        })
-    })
+router.delete('/remove/:user_id/liked/:pet_id', async (req, res) => {
+    try {
+        const user_id = req.params.user_id
+        const pet_id = req.params.pet_id
+
+        // Find the user document by user_id
+        const user = await schema.user.findById(user_id)
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' })
+        }
+
+        // Remove the pet_id from the liked array
+        user.liked = user.liked.filter(pet => pet != pet_id)
+
+        // Update the user document with the modified liked array
+        const updatedUser = await user.save()
+
+        // Respond with the updated user document
+        res.json(updatedUser)
+    } catch (err) {
+        // Handle any errors that occur during the process
+        console.error(err)
+        res.status(500).json({ error: 'Internal server error' })
+    }
 })
+
  
 export default router

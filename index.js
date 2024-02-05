@@ -16,26 +16,26 @@ const whitelist = [
   'http://192.168.1.157:4173',
   'http://192.168.1.157:5173',
   'https://pete-alpha.vercel.app', // Add this line
-];
+]
 app.use((req, res, next) => {
-  console.log('Incoming request:', req.method, req.url);
-  console.log('Origin:', req.headers.origin);
-  next();
-});
+  console.log('Incoming request:', req.method, req.url)
+  console.log('Origin:', req.headers.origin)
+  next()
+})
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || whitelist.indexOf(origin) !== -1) {
       // Allow requests with no origin (like mobile apps or curl requests) and whitelisted origins
-      callback(null, true);
+      callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error('Not allowed by CORS'))
     }
   },
   methods: ['GET', 'POST', 'OPTIONS', 'DELETE'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
-}));
+}))
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
