@@ -32,14 +32,14 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'OPTIONS', 'DELETE'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
 }));
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
-app.use(middlewares.logger)
+// app.use(middlewares.logger)
 app.use(middlewares.authenticate)
 app.use(helmet.dnsPrefetchControl())
 app.use(helmet.frameguard())
