@@ -45,7 +45,7 @@ const processImagesAndUpload = (req, res, next) => {
                 }
                 return s3.upload(params).promise()
             })
-    })3
+    })
 
     Promise.all(uploadPromises)
         .then(results => {
