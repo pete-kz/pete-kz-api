@@ -1,14 +1,14 @@
 import { Router } from 'express'
-const router = Router()
-import schema from '../models/index.js'
-import errors from '../config/errors.js'
 import multer from 'multer'
 import AWS from 'aws-sdk'
-import multerS3 from 'multer-s3'
-
+import sharp from 'sharp'
 import dotenv from 'dotenv'
+import schema from '../models/index.js'
+import errors from '../config/errors.js'
+
 dotenv.config()
 
+const router = Router()
 const spacesEndpoint = new AWS.Endpoint(process.env.AWS_ENDPOINT)
 const s3 = new AWS.S3({
     endpoint: spacesEndpoint,
@@ -17,27 +17,50 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.SECRET_ACCESS_KEY,
 })
 
+// Setup multer for in-memory storage
 const upload = multer({
-    dest: './images',
-    limits : { fileSize: 15000000 },
-    storage: multerS3({
-        s3: s3,
-        acl: 'public-read',
-        bucket: 'petinder',
-        contentType: multerS3.AUTO_CONTENT_TYPE,
-        metadata: function (req, file, cb) {
-            cb(null, { fieldName: file.fieldname })
-        },
-        key: function (req, file, cb) {
-            cb(null, `pet_images/${Date.now().toString()}.${file.originalname.split('.')[1]}`)
-        }
-    })
+    limits: { fileSize: 15000000 },
+    storage: multer.memoryStorage(),
 })
 
+// Process and upload images
+const processImagesAndUpload = (req, res, next) => {
+    if (!req.files) {
+        return next() // Continue without processing if no files are uploaded
+    }
+
+    // Process each file using Sharp and upload to S3
+    const uploadPromises = req.files.map(file => {
+        return sharp(file.buffer)
+            .resize(1024) // Optional: Adjust size
+            .jpeg({ quality: 80 }) // Optional: Adjust format and quality
+            .toBuffer()
+            .then(buffer => {
+                const params = {
+                    Bucket: 'petinder',
+                    Key: `pet_images/${Date.now().toString()}.${file.originalname.split('.')[1]}`,
+                    Body: buffer,
+                    ACL: 'public-read',
+                    ContentType: 'image/jpeg', // Change as needed
+                }
+                return s3.upload(params).promise()
+            })
+    })3
+
+    Promise.all(uploadPromises)
+        .then(results => {
+            // Attach the S3 URLs to the request for further processing
+            req.body.imagesPath = results.map(result => result.Location)
+            next()
+        })
+        .catch(err => {
+            res.status(500).json({ error: err.message })
+        })
+}
 router.post('/find', (req, res) => {
-    
+
     schema.pet.find(req.body.query || {}).then((docs, err) => {
-        if (err) { return res.json(errors.internalError).status(500) }
+        if (err) { return res.json(err).status(500) }
         if (docs) { res.json(docs) }
     })
 })
@@ -50,30 +73,15 @@ router.get('/find/all', (req, res) => {
 })
 
 // Add new pet
-router.post('/add', upload.array('images'), (req, res) => {
-    
-    let imagesPaths = []
-    if (req.files != undefined) {
-        req.files.map(file => {
-            imagesPaths.push(file.location)
+router.post('/add', upload.array('images'), processImagesAndUpload, (req, res) => {
+    req.body.name = req.body.name[0]
+    const newPet = new schema.pet(req.body)
+    newPet.save()
+        .then(docs => res.json(docs))
+        .catch(err => {
+            res.status(500).json({ err })
+            console.error(err)
         })
-    }
-
-    const requestBody = {
-        name: req.body.name[0],
-        age: req.body.age,
-        type: req.body.type,
-        description: req.body.description,
-        userID: req.body.userID,
-        imagesPath: imagesPaths,
-        city: req.body.city,
-    }
-    const newPet = new schema.pet(requestBody)
-    
-    newPet.save().then((docs, err) => {
-        if (err) { return res.json(errors.internalError).status(500) }
-        res.json(docs)
-    })
 })
 
 // Remove existing pet
