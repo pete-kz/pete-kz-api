@@ -13,7 +13,6 @@ const petSchema = new mongoose.Schema({
 
 // User's schema
 const userSchema = new mongoose.Schema({
-    login: { type: String, unique: true },
     name: { type: String },
     phone: { type: String, unique: true },
     social: {
@@ -25,14 +24,7 @@ const userSchema = new mongoose.Schema({
     token: { type: String, default: '' }
 }, { timestamps: true })
 
-// Config schema
-const configSchema = new mongoose.Schema({
-    admins: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], default: []},
-    name: { type: String, default: 'Petinder'},
-})
-
 export default {
     user: mongoose.model('User', userSchema),
-    pet: mongoose.model('Pet', petSchema),
-    config: mongoose.model('Config', configSchema)
+    pet: mongoose.model('Pet', petSchema)
 }

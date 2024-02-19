@@ -69,7 +69,7 @@ app.use(helmet.xssFilter())
 //mongoose setup
 const url = process.env.MONGO_URI || ''
 mongoose.set('strictQuery', true)
-async function mongooseConnect() { await mongoose.connect(url) }
+async function mongooseConnect() { await mongoose.connect(url, { dbName: process.env.DB_NAME || 'petinder_dev' }) }
 mongooseConnect().catch(err => console.log(err))
 const db = mongoose.connection
 
