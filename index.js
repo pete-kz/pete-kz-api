@@ -16,7 +16,9 @@ let totalRequestsPerMinute = 0
 const whitelist = [
   'http://localhost:5173',
   'http://localhost:4173',
-  'https://pete-alpha.vercel.app', // Add this line
+  'https://pete-alpha.vercel.app', 
+  'https://pete.kz', 
+  'https://preview.pete.kz',
 ]
 
 app.use(cors({
