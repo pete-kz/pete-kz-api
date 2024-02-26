@@ -50,7 +50,7 @@ const processImagesAndUpload = (req, res, next) => {
     Promise.all(uploadPromises)
         .then(results => {
             // Attach the S3 URLs to the request for further processing
-            req.body.imagesPath = results.map(result => result.Location.replace('https://petinder.fra1.digitaloceanspaces.com', 'https://spaces.pete.kz/'))
+            req.body.imagesPath = results.map(result => result.Location.replace('https://petinder.fra1.digitaloceanspaces.com', 'https://spaces.pete.kz'))
             next()
         })
         .catch(err => {
