@@ -50,7 +50,7 @@ const processImagesAndUpload = (req, res, next) => {
     Promise.all(uploadPromises)
         .then(results => {
             // Attach the S3 URLs to the request for further processing
-            req.body.imagesPath = results.map(result => result.Location)
+            req.body.imagesPath = results.map(result => result.Location.replace('https://petinder.fra1.digitaloceanspaces.com', 'https://spaces.pete.kz/'))
             next()
         })
         .catch(err => {
@@ -74,7 +74,7 @@ router.get('/find/all', (req, res) => {
 
 // Add new pet
 router.post('/add', upload.array('images'), processImagesAndUpload, (req, res) => {
-    req.body.name = req.body.name[0]
+    req.body.name = req.body.name
     const newPet = new schema.pet(req.body)
     newPet.save()
         .then(docs => res.json(docs))
