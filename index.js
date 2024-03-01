@@ -7,7 +7,7 @@ import { config } from "dotenv"
 config()
 
 const app = express()
-const port = process.env.EXPRESS_PORT || 3000
+const port = process.env.PORT || 3000
 const middlewares = utils.middlewares
 let reqCount = 0
 let lastTime = Date.now()
@@ -96,8 +96,6 @@ app.listen(port, () => {
     const API = { name: 'API_PORT', value: port }
     const MONGODB = { name: 'MONGODB_URL', value: url }
     const SECRET = { name: 'JWT_SECRET', value: process.env.SECRET }
-    // const ACCESS_KEY_ID = { name: 'ACCESS_KEY_ID', value: security.accessKeyId }
-    // const SECRET_ACCESS_KEY = { name: 'SECRET_ACCESS_KEY', value: security.secretAccessKey }
     const array = [API, MONGODB, SECRET]
 
     const transformed = array.reduce((acc, { name, ...x }) => { acc[name] = x; return acc }, {})
