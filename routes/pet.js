@@ -97,9 +97,16 @@ router.post('/remove', (req, res) => {
 })
 
 // Edit existing pet
-router.post('/edit', (req, res) => {
-    // { query: { id }, updated: { address: ryskulova } }
-    schema.pet.findOneAndUpdate(req.body.query, req.body.updated).then((docs, err) => {
+router.post('/edit/:id', (req, res) => {
+    schema.pet.findByIdAndUpdate(req.params.id, req.body).then((docs, err) => {
+        if (err) { return res.json(errors.internalError).status(500) }
+        else { res.json(docs) }
+    })
+})
+
+// Replace existing pet
+router.post('/replace/:id', (req, res) => {
+    schema.pet.findOneAndReplace({ _id: req.params.id }, req.body).then((docs, err) => {
         if (err) { return res.json(errors.internalError).status(500) }
         else { res.json(docs) }
     })
