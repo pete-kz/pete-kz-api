@@ -77,7 +77,6 @@ router.get('/find/all', (req, res) => {
 
 // Add new pet
 router.post('/add', upload.array('images'), processImagesAndUpload, (req, res) => {
-    req.body.name = req.body.name
     const newPet = new schema.pet(req.body)
     newPet.save()
         .then(docs => res.json(docs))
@@ -97,7 +96,7 @@ router.post('/remove', (req, res) => {
 })
 
 // Edit existing pet
-router.post('/edit/:id', (req, res) => {
+router.post('/edit/:id', upload.array('images'), processImagesAndUpload, (req, res) => {
     schema.pet.findByIdAndUpdate(req.params.id, req.body).then((docs, err) => {
         if (err) { return res.json(errors.internalError).status(500) }
         else { res.json(docs) }
