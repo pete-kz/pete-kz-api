@@ -38,7 +38,7 @@ const processImagesAndUpload = (req, res, next) => {
             .then(buffer => {
                 const params = {
                     Bucket: process.env.BUCKET_NAME,
-                    Key: `pet_images/${Date.now().toString()}.${file.originalname.split('.')[1]}`,
+                    Key: `images/pet/${Date.now().toString()}.${file.originalname.split('.')[1]}`,
                     Body: buffer,
                     ACL: 'public-read',
                     ContentType: 'image/jpeg', // Change as needed
@@ -47,16 +47,19 @@ const processImagesAndUpload = (req, res, next) => {
             })
     })
 
+    const uploadDomain = `https://${process.env.BUCKET_NAME}.${process.env.AWS_ENDPOINT.replace('https://', '')}`
+
     Promise.all(uploadPromises)
         .then(results => {
             // Attach the S3 URLs to the request for further processing
-            req.body.imagesPath = results.map(result => result.Location.replace('https://petinder.fra1.digitaloceanspaces.com', process.env.BUCKET_DOMAIN ? process.env.BUCKET_DOMAIN : 'https://petinder.fra1.digitaloceanspaces.com'))
+            req.body.imagesPath = results.map(result => result.Location.replace(uploadDomain, process.env.BUCKET_DOMAIN || uploadDomain))
             next()
         })
         .catch(err => {
             res.status(500).json({ error: err.message })
         })
 }
+
 router.post('/find', (req, res) => {
 
     schema.pet.find(req.body.query || {}).then((docs, err) => {
