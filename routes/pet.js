@@ -56,7 +56,7 @@ const processImagesAndUpload = (req, res, next) => {
             next()
         })
         .catch(err => {
-            res.status(500).json({ error: err.message })
+            res.status(500).json({ error: err })
         })
 }
 
@@ -97,18 +97,9 @@ router.post('/remove', (req, res) => {
 
 // Edit existing pet
 router.post('/edit/:id', upload.array('images'), processImagesAndUpload, (req, res) => {
-    schema.pet.findByIdAndUpdate(req.params.id, req.body).then((docs, err) => {
-        if (err) { return res.json(errors.internalError).status(500) }
-        else { res.json(docs) }
-    })
-})
-
-// Replace existing pet
-router.post('/replace/:id', (req, res) => {
-    schema.pet.findOneAndReplace({ _id: req.params.id }, req.body).then((docs, err) => {
-        if (err) { return res.json(errors.internalError).status(500) }
-        else { res.json(docs) }
-    })
+    schema.pet.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
+        .then(doc => { res.json(doc) })
+        .catch(err => { res.status(500).json({ error: 'Internal Server Error' }) })
 })
 
 export default router
