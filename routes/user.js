@@ -59,10 +59,12 @@ router.post('/register', limit({
             if (err) { return res.json(errors.internalError).status(500) }
             // create new user
             const userNew = new schema.user({
-                login: req.body.login,
-                name: req.body.name,
-                password: hash.toString(),
-                phone: req.body.phone
+                companyName: req.body.companyName,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                phone: req.body.phone,
+                type: req.body.type,
+                password: hash.toString()
             })
             
             userNew.save().then((docs, err) => {
