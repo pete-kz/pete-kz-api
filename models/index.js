@@ -3,7 +3,7 @@ import mongoose from 'mongoose'
 // Pet's schema
 const petSchema = new mongoose.Schema({
     name: { type: String },
-    age: { type: String },
+    birthDate: { type: String },
     type: { type: String },
     sterilized: { type: Boolean },
     sex: { type: String, enum: ['male', 'female'] },
