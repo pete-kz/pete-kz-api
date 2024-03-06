@@ -96,9 +96,8 @@ router.post('/update/:id', (req, res) => {
     })
 })
 
-router.post('/find', (req, res) => {
-    // { query: { token: 'some_token_here' } }
-    schema.user.findOne(req.body.query || {}).then((docs, err) => {
+router.get('/find', (req, res) => {
+    schema.user.find({}).then((docs, err) => {
         if (err || !docs) { 
             res.json(errors.internalError).status(500) 
         }
@@ -106,13 +105,13 @@ router.post('/find', (req, res) => {
     })
 })
 
-router.get('/find/all', (req, res) => {
-    schema.user.find({}).then((docs, err) => {
+router.get('/find/:id', (req, res) => {
+    const userID = req.params.id
+    schema.user.findById(userID).then((docs, err) => {
         if (err || !docs) { 
             res.json(errors.internalError).status(500) 
-            return
         }
-        res.json(docs)
+        else { res.json(docs) }
     })
 })
 
@@ -147,7 +146,6 @@ router.delete('/remove/:user_id/liked/:pet_id', async (req, res) => {
         res.json(updatedUser)
     } catch (err) {
         // Handle any errors that occur during the process
-        console.error(err)
         res.status(500).json({ error: 'Internal server error' })
     }
 })

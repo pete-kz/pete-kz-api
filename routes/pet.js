@@ -60,18 +60,22 @@ const processImagesAndUpload = (req, res, next) => {
         })
 }
 
-router.post('/find', (req, res) => {
-
-    schema.pet.find(req.body.query || {}).then((docs, err) => {
-        if (err) { return res.json(err).status(500) }
-        if (docs) { res.json(docs) }
+router.get('/find', (req, res) => {
+    schema.pet.find({}).then((docs, err) => {
+        if (err || !docs) { 
+            res.json(errors.internalError).status(500) 
+        }
+        else { res.json(docs) }
     })
 })
 
-router.get('/find/all', (req, res) => {
-    schema.pet.find({}).then((docs, err) => {
-        if (err) { return res.json(errors.internalError).status(500) }
-        if (docs) { res.json(docs) }
+router.get('/find/:id', (req, res) => {
+    const petID = req.params.id
+    schema.pet.findById(petID).then((docs, err) => {
+        if (err || !docs) { 
+            res.json(errors.internalError).status(500) 
+        }
+        else { res.json(docs) }
     })
 })
 
@@ -82,7 +86,6 @@ router.post('/add', upload.array('images'), processImagesAndUpload, (req, res) =
         .then(docs => res.json(docs))
         .catch(err => {
             res.status(500).json({ err })
-            console.error(err)
         })
 })
 
