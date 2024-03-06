@@ -104,6 +104,16 @@ router.post('/find', (req, res) => {
     })
 })
 
+router.get('/find/all', (req, res) => {
+    schema.user.find({}).then((docs, err) => {
+        if (err || !docs) { 
+            res.json(errors.internalError).status(500) 
+            return
+        }
+        res.json(docs)
+    })
+})
+
 router.post('/remove', (req, res) => {
     
     schema.user.findByIdAndDelete(req.body.query, (err, docs) => {
