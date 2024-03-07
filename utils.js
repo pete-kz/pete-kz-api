@@ -15,7 +15,7 @@ export default {
             // Paths whitelist
             const pathsWhitelists = ['/users/login', '/users/register', '/users/find']
             // Bypass authorization middleware if path includes "auth" or it ends with api (for testing purposes)
-            if (pathsWhitelists.includes(req.path) || req.path.includes('pets/find')) {
+            if (pathsWhitelists.includes(req.path) || req.path.includes('pets/find') || req.path.includes('pets/recommendations')) {
                 next()
             }
             // Token exists then validate to provide access or not
