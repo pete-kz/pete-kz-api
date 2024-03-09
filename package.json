@@ -1,9 +1,13 @@
 {
   "name": "petinder",
   "module": "index.ts",
-  "type": "module",
-  "devDependencies": {
-    "bun-types": "latest"
+  "type": "commonjs",
+  "scripts": {
+    "start": "node build/index.js",
+    "dev": "nodemon index.ts",
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "peerDependencies": {
     "typescript": "^5.4.2"
@@ -29,5 +33,10 @@
     "multer-s3": "^2.10.0",
     "sharp": "^0.33.2",
     "validator": "^13.11.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "eslint": "^8.57.0"
   }
 }

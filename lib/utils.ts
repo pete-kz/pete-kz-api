@@ -1,58 +1,97 @@
-import schema from '../models/index.js'
+import schema, { petSchema } from "../models/index"
+import validator from "validator"
+import jwt from "jsonwebtoken"
+import { NextFunction, Response, Request } from "express"
+export interface Filter {
+  type?: string,
+  sterilized?: boolean,
+  sex?: "male" | "female",
+  weight?: number,
+  owner_type?: string
+}
 
-export const getPaginatedSortedPets = async (filters = {}, page = 1, limit = 10) => {
-    const skip = (page - 1) * limit
+interface utils {
+  middlewares: {
+      [key: string]: (req: Request, res: Response, next: NextFunction) => void
+  },
+  getPaginatedSortedPets: (filters: Filter, page: number, limit: number) => Promise<petSchema[]>
+}
 
-    const matchStage = {
-      $match: {
-        // ...filters.type && { type: filters.type },
-        ...filters.sterilized && { sterilized: filters.sterilized  },
-        // ...filters.sex && { sex: filters.sex },
-        // For weight, assuming you want pets that are at least of the specified weight
-        // ...filters.weight && { weight: { $gte: parseFloat(filters.weight) } },
-        // ...filters.owner_type && { owner_type: filters.owner_type },
-      },
-    }
-    console.log(matchStage)
-    const aggregationPipeline = [
-      Object.keys(matchStage.$match).length > 0 ? matchStage : null,
-      {
-        $lookup: {
-          from: "users", // Assuming 'users' is the collection name of User model
-          localField: "_id", // The pet ID field on the Pet document
-          foreignField: "liked", // The field in the User document containing liked pet IDs
-          as: "likesInfo", // The array containing the joined User documents
-        }
-      },
-      {
-        $unwind: "$likesInfo" // Unwind the likesInfo array for counting
-      },
-      {
-        $group: {
-          _id: "$_id", // Group by the pet ID
-          doc: { $first: "$$ROOT" }, // Preserve the original Pet document
-          likesCount: { $sum: 1 } // Count the likes per pet
-        }
-      },
-      {
-        $addFields: {
-          "doc.likesCount": "$likesCount" // Add the likesCount to the original document
-        }
-      },
-      {
-        $replaceRoot: { newRoot: "$doc" } // Replace the root to return the original document structure
-      },
-      {
-        $sort: { "likesCount": -1 } // Sort the documents by likesCount in descending order
-      },
-      {
-        $skip: skip // Pagination: Skip documents
-      },
-      {
-        $limit: limit // Pagination: Limit the number of documents
+export const utils: utils = {
+  middlewares: {
+      authenticate: (req, res, next) => {
+          // Retrieve token from header
+          const authorizationHeader = req.headers["authorization"]
+          // Reserving variable for token
+          let token
+          // Get received token
+          if (authorizationHeader) token = authorizationHeader.split(" ")[1]
+          // Paths whitelist
+          const pathsWhitelists = ["/users/login", "/users/register", "/users/find"]
+          // Bypass authorization middleware if path includes "auth" or it ends with api (for testing purposes)
+          if (pathsWhitelists.includes(req.path) || req.path.includes("pets/find") || req.path.includes("pets/recommendations")) {
+              next()
+          }
+          // Token exists then validate to provide access or not
+            else if (token && !validator.isEmpty(token)) {
+              // Validate token with the secret
+              jwt.verify(token, process.env.SECRET as string, (err) => {
+                if (err) {
+                  res.status(401).json({ err: "Чтобы выполнить это действие, выполните вход." })
+                  res.end()
+                } else {
+                  // Suggest - You can check database here if you want to save it
+                  
+                  next() // Let de request proceed to it's endpoint naturally
+                }
+              })
+            } else {
+              res.status(401).json({ err: "Неавторизованы! Чтобы выполнить это действие, выполните вход." })
+              res.end()
+          }
       }
-    ].filter(stage => stage !== null)
+  },
+  getPaginatedSortedPets: async (filters: Filter, page = 1, limit = 10) => {
+    const skip = (page - 1) * limit
+    const allPets = await schema.pet.find({})
+    const allUsers = await schema.user.find({})
   
-    return schema.pet.aggregate(aggregationPipeline)
+    // Initialize a map to count likes for each pet
+    const likesCount = new Map()
+  
+    // Populate the map with the count of likes for each pet
+    allUsers.forEach(user => {
+        user.liked.forEach(petId => {
+            likesCount.set(petId, (likesCount.get(petId) || 0) + 1)
+        })
+    })
+  
+    function matchFilters(pet: petSchema) {
+      let matchesFilter = true
+      // Only apply filters if they differ from default values
+      if (filters.type && filters.type !== "" && pet.type !== filters.type) matchesFilter = false
+      if (filters.sterilized !== undefined && filters.sterilized !== false && pet.sterilized !== filters.sterilized) matchesFilter = false
+      if (filters.sex && pet.sex !== filters.sex) matchesFilter = false
+      if (filters.weight && filters.weight !== 0 && pet.weight !== filters.weight) matchesFilter = false
+      if (filters.owner_type && filters.owner_type !== "") {
+        const owner = allUsers.find(user => user._id.toString() === pet.ownerID!.toString())
+        if (!owner || owner.type !== filters.owner_type) matchesFilter = false
+      }
+      return matchesFilter
+    }
+  
+    const filteredPets = allPets.filter(matchFilters)
+  
+    // Sort pets by likes (from most liked to least liked)
+    const sortedPets = filteredPets.sort((a, b) => {
+        const likesA = likesCount.get(a._id.toString()) || 0
+        const likesB = likesCount.get(b._id.toString()) || 0
+        return likesB - likesA // Descending order
+    })
+  
+    // Implement pagination
+    const paginatedPets = sortedPets.slice(skip, skip + limit)
+  
+    return paginatedPets
   }
-  
+}

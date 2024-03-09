@@ -1,53 +1,65 @@
 import { Router } from "express"
-import bcrypt from 'bcrypt'
+import bcrypt from "bcrypt"
 const router = Router()
-import schema from '../models/index.js'
-import jwt from 'jsonwebtoken'
-import { limit } from 'express-limit'
-import errors from '../config/errors.js'
+import schema from "../models/index"
+import jwt from "jsonwebtoken"
+// @ts-expect-error no declaration file for express-limit
+import { limit } from "express-limit"
+import errors from "../config/errors"
 
-router.post('/login', limit({
+router.post("/login", limit({
     max: 5,        // 5 requests
     period: 60 * 1000 // per minute (60 seconds)
-}), (req, res) => {
+}), async (req, res) => {
     const phone = req.body.phone
-    
-    schema.user.findOne({ phone }).then((docs, err) => {
-        if (err) { throw err }
-        if (docs == null) {
+
+    try {
+        const user = await schema.user.findOne({ phone })
+
+        if (user == null) {
             return res.json(errors.accNotFound)
         }
-        const password = req.body.password
-        const hash = docs.password
-        bcrypt.compare(password, hash, function (err, result) {
-            if (err) { res.json(errors.internalError).status(500) }
-            if (result) {
-                let updatedDocs = {
-                    _id: docs._id,
-                    login: docs.login,
-                    phone: docs.phone
-                }
-                let token = jwt.sign(updatedDocs, process.env.SECRET)
-                schema.user.findOneAndUpdate({ _id: docs._id }, { token }).then((docs, err) => {
-                    if (err) { res.json(errors.internalError).status(500) }
 
+        const password = req.body.password
+        const hash = user.password
+
+        bcrypt.compare(password, hash, function (err, result) {
+            if (err) {
+                console.error(err)
+                res.json(errors.internalError).status(500)
+            }
+            if (result) {
+                const updatedDocs = {
+                    _id: user._id,
+                    phone: user.phone
+                }
+                const token = jwt.sign(updatedDocs, process.env.SECRET as string, { expiresIn: "72h" })
+                try {
+                    schema.user.findOneAndUpdate({ _id: updatedDocs._id }, { token })
                     res.json({
                         token,
                         docs: updatedDocs,
-                        expiresIn: 3600
+                        expiresIn: "72h"
                     })
-                })
+                } catch (err) {
+                    console.error(err)
+                    res.json(errors.internalError).status(500)
+                }
             } else {
                 res.json(errors.accNotFound)
             }
         })
-    }).catch(e => console.log(e))
+    } catch (err) {
+        console.error(err)
+        res.json(errors.internalError).status(500)
+    }
+
 })
 
-router.post('/register', limit({
+router.post("/register", limit({
     max: 5,        // 5 requests
     period: 60 * 1000 // per minute (60 seconds)
-}), (req, res) => {
+}), async (req, res) => {
     const saltRounds = 10
     const password = req.body.password
 
@@ -66,65 +78,73 @@ router.post('/register', limit({
                 type: req.body.type,
                 password: hash.toString()
             })
-            
-            userNew.save().then((docs, err) => {
-                if (err) { return res.json(errors.accExists).status(403) }
-                res.json(docs)
-            })
+
+            try {
+                userNew.save()
+            } catch (err) {
+                console.error(err)
+                res.json(errors.internalError).status(500)
+            }
 
         })
     })
 })
 
-router.post('/update/:id', (req, res) => {
+router.post("/update/:id", async (req, res) => {
     // { query: { _id: 'some_id_here' }, update: { password: 'new_password_hash'} }
     const user_id = req.params.id
     // check if update contains updated password, if yes then hash it and replace naked password in request body's field "password"
     if (req.body.update.password) {
         bcrypt.genSalt(10, function (err, salt) {
             if (err) { return res.json(errors.internalError).status(500) }
-            bcrypt.hash(password, salt, function (err, hash) {
+            bcrypt.hash(req.body.update.password, salt, function (err, hash) {
                 if (err) { return res.json(errors.internalError).status(500) }
                 req.body.password = hash.toString()
             })
         })
-    } 
+    }
 
-    schema.user.findByIdAndUpdate(user_id, req.body.update).then((docs, err) => {
-        if (err) { res.json(errors.internalError).status(500) }
-        res.json(docs)
-    })
+    try {
+        await schema.user.findByIdAndUpdate(user_id, req.body.update)
+    } catch (err) {
+        console.error(err)
+        res.json(errors.internalError).status(500)
+    }
 })
 
-router.get('/find', (req, res) => {
-    schema.user.find({}).then((docs, err) => {
-        if (err || !docs) { 
-            res.json(errors.internalError).status(500) 
-        }
-        else { res.json(docs) }
-    })
+router.get("/find", async (req, res) => {
+    try {
+        const users = await schema.user.find({})
+        res.json(users)
+    } catch (err) {
+        console.error(err)
+        res.json(errors.internalError).status(500)
+    }
 })
 
-router.get('/find/:id', (req, res) => {
+router.get("/find/:id", async (req, res) => {
     const userID = req.params.id
-    schema.user.findById(userID).then((docs, err) => {
-        if (err || !docs) { 
-            res.json(errors.internalError).status(500) 
-        }
-        else { res.json(docs) }
-    })
+    try {
+        const user = await schema.user.findById(userID)
+        res.json(user)
+    } catch (err) {
+        console.error(err)
+        res.json(errors.internalError).status(500)
+    }
 })
 
-router.post('/remove', (req, res) => {
-    
-    schema.user.findByIdAndDelete(req.body.query, (err, docs) => {
-        if (err) { res.json(errors.internalError).status(500) }
-        else if (docs == null) { res.json(errors.internalError).status(500) }
-        else { res.json(docs) }
-    })
+router.post("/remove/:id", async (req, res) => {
+    const userID = req.params.id
+    try {
+        await schema.user.findByIdAndDelete(userID)
+        res.end()
+    } catch (err) {
+        console.error(err)
+        res.json(errors.internalError).status(500)
+    }
 })
 
-router.delete('/remove/:user_id/liked/:pet_id', async (req, res) => {
+router.delete("/remove/:user_id/liked/:pet_id", async (req, res) => {
     try {
         const user_id = req.params.user_id
         const pet_id = req.params.pet_id
@@ -133,11 +153,11 @@ router.delete('/remove/:user_id/liked/:pet_id', async (req, res) => {
         const user = await schema.user.findById(user_id)
 
         if (!user) {
-            return res.status(404).json({ error: 'User not found' })
+            return res.status(404).json({ error: "User not found" })
         }
 
         // Remove the pet_id from the liked array
-        user.liked = user.liked.filter(pet => pet != pet_id)
+        user.liked = user.liked.filter(_petID => (_petID as unknown as string) != pet_id)
 
         // Update the user document with the modified liked array
         const updatedUser = await user.save()
@@ -146,9 +166,9 @@ router.delete('/remove/:user_id/liked/:pet_id', async (req, res) => {
         res.json(updatedUser)
     } catch (err) {
         // Handle any errors that occur during the process
-        res.status(500).json({ error: 'Internal server error' })
+        res.status(500).json({ error: "Internal server error" })
     }
 })
 
- 
+
 export default router
