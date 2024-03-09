@@ -1,7 +1,7 @@
-import mongoose from 'mongoose'
+import { Schema, model, InferSchemaType } from 'mongoose'
 
 // Pet's schema
-const petSchema = new mongoose.Schema({
+const petSchema = new Schema({
     name: { type: String },
     birthDate: { type: String },
     type: { type: String },
@@ -9,13 +9,14 @@ const petSchema = new mongoose.Schema({
     sex: { type: String, enum: ['male', 'female'] },
     weight: { type: Number, default: 0 },
     description: { type: String, default: '' }, 
-    ownerID: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    ownerID: { type: Schema.Types.ObjectId, ref: 'User' },
     imagesPath: [{ type: String }],
     city: { type: String },
 }, { timestamps: true })
+type petSchema = InferSchemaType<typeof petSchema>
 
 // User's schema
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
     companyName: { type: String, default: '' },
     firstName: { type: String },
     lastName: { type: String },
@@ -26,11 +27,14 @@ const userSchema = new mongoose.Schema({
         instagram: { type: String, default: '' },
     },
     password: { type: String, default: '' },
-    liked: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
+    liked: { type: [{ type: Schema.Types.ObjectId, ref: 'Pet' }], default: [] },
     token: { type: String, default: '' }
 }, { timestamps: true })
+type userSchema = InferSchemaType<typeof userSchema>
 
+export { type userSchema, type petSchema } 
 export default {
-    user: mongoose.model('User', userSchema),
-    pet: mongoose.model('Pet', petSchema)
+    user: model('User', userSchema),
+    userSchema,
+    pet: model('Pet', petSchema)
 }

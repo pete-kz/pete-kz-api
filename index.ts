@@ -98,6 +98,7 @@ app.listen(port, () => {
     const SECRET = { name: 'JWT_SECRET', value: process.env.SECRET }
     const array = [API, MONGODB, SECRET]
 
+    // @ts-ignore
     const transformed = array.reduce((acc, { name, ...x }) => { acc[name] = x; return acc }, {})
     console.table(transformed)
   })
