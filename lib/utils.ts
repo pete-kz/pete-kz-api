@@ -27,9 +27,9 @@ export const utils: utils = {
           // Get received token
           if (authorizationHeader) token = authorizationHeader.split(" ")[1]
           // Paths whitelist
-          const pathsWhitelists = ["/users/login", "/users/register", "/users/find"]
-          // Bypass authorization middleware if path includes "auth" or it ends with api (for testing purposes)
-          if (pathsWhitelists.includes(req.path) || req.path.includes("pets/find") || req.path.includes("pets/recommendations")) {
+          const pathWhitelist = ["pets/find", "pets/recommendations", "users/find", "users/login", "users/register"]
+          // If path is whitelisted then proceed
+          if (pathWhitelist.some(path => req.path.includes(path))) {
               next()
           }
           // Token exists then validate to provide access or not

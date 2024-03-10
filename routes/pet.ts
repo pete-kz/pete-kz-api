@@ -119,7 +119,7 @@ router.post("/add", upload.array("images"), processImagesAndUpload, (req, res) =
 })
 
 // Remove existing pet
-router.post("/remove/:id", async (req, res) => {
+router.delete("/remove/:id", async (req, res) => {
     try {
         await schema.pet.findByIdAndDelete(req.params.id)
         res.json({ message: "Pet removed successfully" })
