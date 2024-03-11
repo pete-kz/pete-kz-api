@@ -59,6 +59,7 @@ const processImagesAndUpload: (req: Request, res: Response, next: NextFunction) 
             next()
         })
         .catch(err => {
+            console.error(err)
             res.status(500).json({ error: err })
         })
 }
@@ -82,7 +83,7 @@ router.get("/recommendations", async (req, res) => {
         res.json(pets) 
     } catch (err) {
         console.error(err)
-        res.status(500).json(err)
+        res.status(500).json({ msg: "internal" })
     }
 })
 
@@ -93,7 +94,7 @@ router.get("/find", async (req, res) => {
         res.json(pets)
     } catch (err) {
         console.error(err)
-        res.status(500).json(err)
+        res.status(500).json({ msg: "internal" })
     }
 })
 
@@ -104,7 +105,7 @@ router.get("/find/:id", async (req, res) => {
         res.json(pet)
     } catch (err) {
         console.error(err)
-        res.status(500).json(err)
+        res.status(500).json({ msg: "internal" })
     }
 })
 
@@ -114,7 +115,8 @@ router.post("/add", upload.array("images"), processImagesAndUpload, (req, res) =
     newPet.save()
         .then(docs => res.json(docs))
         .catch(err => {
-            res.status(500).json({ err })
+            console.error(err)
+            res.status(500).json({ msg: "internal" })
         })
 })
 
@@ -125,7 +127,7 @@ router.delete("/remove/:id", async (req, res) => {
         res.json({ message: "Pet removed successfully" })
     } catch (err) {
         console.error(err)
-        res.status(500).json(err)
+        res.status(500).json({ msg: "internal" })
     }
 })
 
@@ -136,7 +138,7 @@ router.post("/edit/:id", upload.array("images"), processImagesAndUpload, async (
         res.json(updatedPet)
     } catch (err) {
         console.error(err)
-        res.status(500).json(err)
+        res.status(500).json({ msg: "internal" })
     }
 })
 

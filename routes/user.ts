@@ -5,7 +5,6 @@ import schema from "../models/index"
 import jwt from "jsonwebtoken"
 // @ts-expect-error no declaration file for express-limit
 import { limit } from "express-limit"
-import errors from "../config/errors"
 
 router.post("/login", limit({
     max: 5,        // 5 requests
@@ -17,7 +16,7 @@ router.post("/login", limit({
         const user = await schema.user.findOne({ phone })
 
         if (user == null) {
-            return res.json(errors.accNotFound)
+            return res.json({ msg: "userNotFound" }).status(400)
         }
 
         const password = req.body.password
@@ -26,7 +25,7 @@ router.post("/login", limit({
         bcrypt.compare(password, hash, function (err, result) {
             if (err) {
                 console.error(err)
-                res.json(errors.internalError).status(500)
+                res.json({ msg: "internal" }).status(500)
             }
             if (result) {
                 const updatedDocs = {
@@ -43,15 +42,15 @@ router.post("/login", limit({
                     })
                 } catch (err) {
                     console.error(err)
-                    res.json(errors.internalError).status(500)
+                    res.json({ msg: "internal" }).status(500)
                 }
             } else {
-                res.json(errors.accNotFound)
+                res.json({ msg: "wrongPassword" }).status(400)
             }
         })
     } catch (err) {
         console.error(err)
-        res.json(errors.internalError).status(500)
+        res.json({ msg: "internal" }).status(500)
     }
 
 })
@@ -63,12 +62,25 @@ router.post("/register", limit({
     const saltRounds = 10
     const password = req.body.password
 
+    // check if user exists already
+    const userExists = await schema.user.findOne({ phone: req.body.phone })
+
+    if (userExists) {
+        return res.json({ msg: "userExists" }).status(400)
+    }
+
     // generate salt and hash for password encryption
     bcrypt.genSalt(saltRounds, function (err, salt) {
-        if (err) { return res.json(errors.internalError).status(500) }
+        if (err) { 
+            console.error(err)
+            return res.json({ msg: "internal" }).status(500) 
+        }
         bcrypt.hash(password, salt, function (err, hash) {
 
-            if (err) { return res.json(errors.internalError).status(500) }
+            if (err) { 
+                console.error(err)
+                return res.json({ msg: "internal" }).status(500) 
+            }
             // create new user
             const userNew = new schema.user({
                 companyName: req.body.companyName,
@@ -83,7 +95,7 @@ router.post("/register", limit({
                 userNew.save()
             } catch (err) {
                 console.error(err)
-                res.json(errors.internalError).status(500)
+                res.json({ msg: "internal" }).status(500)
             }
 
         })
@@ -96,9 +108,15 @@ router.post("/update/:id", async (req, res) => {
     // check if update contains updated password, if yes then hash it and replace naked password in request body's field "password"
     if (req.body.update.password) {
         bcrypt.genSalt(10, function (err, salt) {
-            if (err) { return res.json(errors.internalError).status(500) }
+            if (err) { 
+                console.error(err)
+                return res.json({ msg: "internal" }).status(500) 
+            }
             bcrypt.hash(req.body.update.password, salt, function (err, hash) {
-                if (err) { return res.json(errors.internalError).status(500) }
+                if (err) { 
+                    console.error(err)
+                    return res.json({ msg: "internal" }).status(500) 
+                }
                 req.body.password = hash.toString()
             })
         })
@@ -108,7 +126,7 @@ router.post("/update/:id", async (req, res) => {
         await schema.user.findByIdAndUpdate(user_id, req.body.update)
     } catch (err) {
         console.error(err)
-        res.json(errors.internalError).status(500)
+        res.json({ msg: "internal" }).status(500)
     }
 })
 
@@ -118,7 +136,7 @@ router.get("/find", async (req, res) => {
         res.json(users)
     } catch (err) {
         console.error(err)
-        res.json(errors.internalError).status(500)
+        res.json({ msg: "internal" }).status(500)
     }
 })
 
@@ -129,7 +147,7 @@ router.get("/find/:id", async (req, res) => {
         res.json(user)
     } catch (err) {
         console.error(err)
-        res.json(errors.internalError).status(500)
+        res.json({ msg: "internal" }).status(500)
     }
 })
 
@@ -140,7 +158,7 @@ router.post("/remove/:id", async (req, res) => {
         res.end()
     } catch (err) {
         console.error(err)
-        res.json(errors.internalError).status(500)
+        res.json({ msg: "internal" }).status(500)
     }
 })
 
@@ -153,7 +171,7 @@ router.delete("/remove/:user_id/liked/:pet_id", async (req, res) => {
         const user = await schema.user.findById(user_id)
 
         if (!user) {
-            return res.status(404).json({ error: "User not found" })
+            return res.json({ msg: "internal" }).status(500)
         }
 
         // Remove the pet_id from the liked array
@@ -166,7 +184,8 @@ router.delete("/remove/:user_id/liked/:pet_id", async (req, res) => {
         res.json(updatedUser)
     } catch (err) {
         // Handle any errors that occur during the process
-        res.status(500).json({ error: "Internal server error" })
+        console.error(err)
+        res.json({ msg: "internal" }).status(500)
     }
 })
 
