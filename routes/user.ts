@@ -32,13 +32,13 @@ router.post("/login", limit({
                     _id: user._id,
                     phone: user.phone
                 }
-                const token = jwt.sign(updatedDocs, process.env.SECRET as string, { expiresIn: "72h" })
+                const token = jwt.sign(updatedDocs, process.env.SECRET as string, { expiresIn: 43200 })
                 try {
                     schema.user.findOneAndUpdate({ _id: updatedDocs._id }, { token })
                     res.json({
                         token,
                         docs: updatedDocs,
-                        expiresIn: "72h"
+                        expiresIn: 43200
                     })
                 } catch (err) {
                     console.error(err)
