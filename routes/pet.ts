@@ -4,7 +4,7 @@ import AWS from "aws-sdk"
 import sharp from "sharp"
 import dotenv from "dotenv"
 import schema from "../models/index"
-import { Filter, utils } from "../lib/utils"
+import utils, { Filter } from "../lib/utils"
 import { PutObjectRequest } from "aws-sdk/clients/s3"
 
 dotenv.config()
@@ -32,21 +32,19 @@ const processImagesAndUpload: (req: Request, res: Response, next: NextFunction) 
 
     // Process each file using Sharp and upload to S3
     // @ts-expect-error 'req.files' is not defined
-    const uploadPromises = req.files.map(file => {
-        return sharp(file.buffer)
+    const uploadPromises = req.files.map(async file => {
+        const buffer = await sharp(file.buffer)
             .resize(1024) // Optional: Adjust size
             .jpeg({ quality: 80 }) // Optional: Adjust format and quality
             .toBuffer()
-            .then(buffer => {
-                const params: PutObjectRequest = {
-                    Bucket: process.env.BUCKET_NAME as string,
-                    Key: `images/pet/${Date.now().toString()}.${file.originalname.split(".")[1]}`,
-                    Body: buffer,
-                    ACL: "public-read",
-                    ContentType: "image/jpeg", // Change as needed
-                }
-                return s3.upload(params).promise()
-            })
+        const params: PutObjectRequest = {
+            Bucket: process.env.BUCKET_NAME as string,
+            Key: `images/pet/${Date.now().toString()}.${file.originalname.split(".")[1]}`,
+            Body: buffer,
+            ACL: "public-read",
+            ContentType: "image/jpeg", // Change as needed
+        }
+        return await s3.upload(params).promise()
     })
 
     const uploadDomain = `https://${process.env.BUCKET_NAME}.${(process.env.AWS_ENDPOINT as string).replace("https://", "")}`
@@ -110,7 +108,7 @@ router.get("/find/:id", async (req, res) => {
 })
 
 // Add new pet
-router.post("/add", upload.array("images"), processImagesAndUpload, (req, res) => {
+router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, (req, res) => {
     const newPet = new schema.pet(req.body)
     newPet.save()
         .then(docs => res.json(docs))
@@ -121,7 +119,7 @@ router.post("/add", upload.array("images"), processImagesAndUpload, (req, res) =
 })
 
 // Remove existing pet
-router.delete("/remove/:id", async (req, res) => {
+router.delete("/remove/:id", utils.middlewares.requireAuth, async (req, res) => {
     try {
         await schema.pet.findByIdAndDelete(req.params.id)
         res.json({ message: "Pet removed successfully" })
@@ -132,7 +130,7 @@ router.delete("/remove/:id", async (req, res) => {
 })
 
 // Edit existing pet
-router.post("/edit/:id", upload.array("images"), processImagesAndUpload, async (req, res) => {
+router.post("/edit/:id", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
     try {
         const updatedPet = await schema.pet.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
         res.json(updatedPet)

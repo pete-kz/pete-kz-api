@@ -1,14 +1,12 @@
 import express from "express"
 import cors from "cors"
 import helmet from "helmet"
-import { utils } from "./lib/utils"
 import mongoose from "mongoose"
 import { config } from "dotenv"
 config()
 
 const app = express()
 const port = process.env.PORT || 3000
-const middlewares = utils.middlewares
 let reqCount = 0
 let lastTime = Date.now()
 let totalRequestsPerMinute = 0
@@ -24,7 +22,7 @@ const whitelist = [
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || whitelist.indexOf(origin) !== -1 || origin.includes("192.168.1.")) {
-      // Allow requests with no origin (like mobile apps or curl requests) and whitelisted origins
+      // Allow requests with no origin (like mobile apps or curl requests), whitelisted origins and local requests
       callback(null, true)
     } else {
       callback(new Error("Not allowed by CORS"))
@@ -44,11 +42,7 @@ app.use((req, res, next) => {
     const totalMinutesTake = Math.round((Date.now() - lastTime) / 1000 / 60)
     console.info(`For the last ${totalMinutesTake} minutes there was ${reqCount} calls.`)
     const requestsPerMinute = Math.round(reqCount / totalMinutesTake)
-    if (totalRequestsPerMinute == 0) {
-      totalRequestsPerMinute = requestsPerMinute
-    } else {
-      totalRequestsPerMinute = (totalRequestsPerMinute + requestsPerMinute) / 2
-    }
+    totalRequestsPerMinute = totalRequestsPerMinute ? (totalRequestsPerMinute + requestsPerMinute) / 2 : requestsPerMinute
     console.info(`Average calls per minute: ${totalRequestsPerMinute}`)
     lastTime = Date.now()
     reqCount = 0
@@ -56,7 +50,6 @@ app.use((req, res, next) => {
 
   next()
 })
-app.use(middlewares.authenticate)
 app.use(helmet.dnsPrefetchControl())
 app.use(helmet.frameguard())
 app.use(helmet.hidePoweredBy())
