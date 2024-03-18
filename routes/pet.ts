@@ -108,7 +108,7 @@ router.get("/find/:id", async (req, res) => {
 })
 
 // Add new pet
-router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, (req, res) => {
+router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
     const newPet = new schema.pet(req.body)
     newPet.save()
         .then(docs => res.json(docs))

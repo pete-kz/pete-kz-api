@@ -3,6 +3,8 @@ import cors from "cors"
 import helmet from "helmet"
 import mongoose from "mongoose"
 import { config } from "dotenv"
+// @ts-expect-error it does not need declaration file
+import compression from "compression"
 config()
 
 const app = express()
@@ -33,6 +35,7 @@ app.use(cors({
   credentials: true,
 }))
 
+app.use(compression())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use((req, res, next) => {
@@ -71,17 +74,15 @@ const db = mongoose.connection
 // importing routes
 import userRoute from "./routes/user"
 import petRoute from "./routes/pet"
+import authRoute from "./routes/auth"
 
 // express routes setup
 app.use("/pets", petRoute)
 app.use("/users", userRoute)
+app.use("/auth", authRoute)
 
-app.get("/api", (req, res) => {
-  res.send("Hello from Petinder API!")
-})
-
-app.get("/", (req, res) => {
-  res.send("Hello from Petinder API!")
+app.get("/healthcheck", async (req, res) => {
+  res.status(200).send("OK")
 })
 
 app.listen(port, () => {

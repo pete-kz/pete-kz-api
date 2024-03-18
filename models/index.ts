@@ -28,7 +28,8 @@ const userSchema = new Schema({
     },
     password: { type: String, default: "" },
     liked: { type: [{ type: Schema.Types.ObjectId, ref: "Pet" }], default: [] },
-    token: { type: String, default: "" }
+    token: { type: String, default: "" },
+    refreshToken: { type: String, default: "" }
 }, { timestamps: true })
 type userSchema = InferSchemaType<typeof userSchema>
 
