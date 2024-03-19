@@ -3,6 +3,7 @@ import cors from "cors"
 import helmet from "helmet"
 import mongoose from "mongoose"
 import { config } from "dotenv"
+import passport from "./passport-config"
 // @ts-expect-error it does not need declaration file
 import compression from "compression"
 config()
@@ -35,6 +36,7 @@ app.use(cors({
   credentials: true,
 }))
 
+app.use(passport.initialize())
 app.use(compression())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
@@ -87,14 +89,7 @@ app.get("/healthcheck", async (req, res) => {
 
 app.listen(port, () => {
   db.once("open", () => { // Remove the unused variable '_'
-    const API = { name: "API_PORT", value: port }
-    const MONGODB = { name: "MONGODB_URL", value: url }
-    const SECRET = { name: "JWT_SECRET", value: process.env.SECRET }
-    const array = [API, MONGODB, SECRET]
-
-    // @ts-expect-error idk some kind of error that im too lazy to fix
-    const transformed = array.reduce((acc, { name, ...x }) => { acc[name] = x; return acc }, {})
-    console.table(transformed)
+    console.log("Connected to MongoDB")
   })
   db.on("error", err => {
     console.error("Сonnection error:", err)

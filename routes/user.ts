@@ -48,7 +48,7 @@ router.get("/find/:id", async (req, res) => {
     if (userID === "me") {
         return res.json({ msg: "notImplemented" }).status(501)
     }
-    if (userID === undefined) {
+    if (userID === "undefined") {
         return res.json({ msg: "badRequest" }).status(400)
     }
     try {

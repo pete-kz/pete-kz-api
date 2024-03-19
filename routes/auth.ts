@@ -1,72 +1,13 @@
 import { Router } from "express"
-import bcrypt from "bcrypt"
 const router = Router()
-import schema from "../models/index"
+import schema from "../models"
 import jwt from "jsonwebtoken"
 // @ts-expect-error no declaration file for express-limit
 import { limit } from "express-limit"
-import utils from "../lib/utils"
+import bcrypt from "bcrypt"
+import passport from "passport"
 import { config } from "dotenv"
 config()
-
-router.post("/refresh", utils.middlewares.requireAuth, async (req, res) => {
-    try {
-        const user = await schema.user.findById(req.body.authUserState._id)
-        if (!user) {
-            return res.json({ msg: "userNotFound" }).status(400)
-        }
-        const updatedDocs = {
-            _id: user._id,
-            phone: user.phone
-        }
-        const newToken = jwt.sign(updatedDocs, process.env.SECRET as string, { expiresIn: 60 * 1000 })
-        user.token = newToken
-        await schema.user.findOneAndUpdate({ _id: user._id }, { $set: user }, { new: true })
-        res.json({
-            token: newToken,
-        })
-    } catch (err) {
-        console.error(err)
-        res.json({ msg: "internal" }).status(500)
-    }
-})
-
-router.post("/login", limit({
-    max: 5,        // 5 requests
-    period: 60 * 1000 // per minute (60 seconds)
-}), async (req, res) => {
-    const phone = req.body.phone
-    try {
-        const user = await schema.user.findOne({ phone })
-        if (user == null) {
-            return res.json({ msg: "userNotFound" }).status(400)
-        }
-        const password = req.body.password
-        const hash = user.password
-        const result = await bcrypt.compare(password, hash)
-        if (result) {
-            const updatedDocs = {
-                _id: user._id,
-                phone: user.phone
-            }
-            const token = jwt.sign(updatedDocs, process.env.SECRET as string, { expiresIn: "1h" })
-            const refreshToken = jwt.sign(updatedDocs, process.env.REFRESH_TOKEN_SECRET as string, { expiresIn: "1d" })
-            user.token = token
-            user.refreshToken = refreshToken
-            await schema.user.findOneAndUpdate({ _id: user._id }, { $set: user }, { new: true })
-            res.json({
-                token,
-                refreshToken,
-                docs: updatedDocs
-            })
-        } else {
-            res.json({ msg: "wrongPassword" }).status(400)
-        }
-    } catch (err) {
-        console.error(err)
-        res.json({ msg: "internal" }).status(500)
-    }
-})
 
 router.post("/register", limit({
     max: 5,        // 5 requests
@@ -104,5 +45,62 @@ router.post("/register", limit({
         res.json({ msg: "internal" }).status(500)
     }
 })
+
+router.post("/login", limit({
+    max: 5,
+    period: 60 * 1000
+}), async (req, res, next) => {
+    passport.authenticate("local", { session: false }, async (err: Error, user: { _id: string; phone: string }, info: { message: string }) => {
+        if (err) return next(err)
+
+        if (!user) {
+            return res.status(400).json({ msg: info.message })
+        }
+
+        const updatedDocs = {
+            _id: user._id,
+            phone: user.phone
+        }
+
+        const token = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: "12h" })
+        const refreshToken = jwt.sign(updatedDocs, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" })
+
+        const userData = await schema.user.findById(user._id)
+        if (userData) {
+            userData.token = token
+            userData.refreshToken = refreshToken
+            await userData.save()
+        }
+
+        res.json({
+            token,
+            refreshToken,
+            docs: updatedDocs
+        })
+    })(req, res, next)
+})
+
+
+router.post("/refresh", (req, res, next) => {
+    passport.authenticate("jwt-refresh", { session: false }, (err: Error, user: { _id: string; phone: string }) => {
+        if (err) return next(err)
+
+        if (!user) {
+            return res.status(400).json({ msg: "Invalid refresh token." })
+        }
+
+        const updatedDocs = {
+            _id: user._id,
+            phone: user.phone
+        }
+
+        const newToken = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: 12 * 60 * 60 * 1000 })
+
+        res.json({
+            token: newToken,
+        })
+    })(req, res, next)
+})
+
 
 export default router
