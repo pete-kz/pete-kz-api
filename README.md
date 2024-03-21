@@ -1,15 +1,19 @@
-# petinder
+# Pete
 
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
-To run:
+To start development:
 
 ```bash
-bun run index.ts
+npm run dev
 ```
 
-This project was created using `bun init` in bun v1.0.3. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+To build and start:
+
+```bash
+npm run build && npm run start
+```
