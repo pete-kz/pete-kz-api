@@ -3,6 +3,7 @@ import { Schema, model, InferSchemaType } from "mongoose"
 // Pet's schema
 const petSchema = new Schema({
     name: { type: String },
+    address: { type: String },
     birthDate: { type: String },
     type: { type: String },
     sterilized: { type: Boolean },
@@ -18,6 +19,7 @@ type petSchema = InferSchemaType<typeof petSchema>
 // User's schema
 const userSchema = new Schema({
     companyName: { type: String, default: "" },
+    address: { type: String, default: "" },
     firstName: { type: String },
     lastName: { type: String },
     phone: { type: String, unique: true },
@@ -36,6 +38,5 @@ type userSchema = InferSchemaType<typeof userSchema>
 export { type userSchema, type petSchema } 
 export default {
     user: model("User", userSchema),
-    userSchema,
     pet: model("Pet", petSchema)
 }
