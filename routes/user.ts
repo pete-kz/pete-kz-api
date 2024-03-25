@@ -98,5 +98,39 @@ router.delete("/remove/:user_id/liked/:pet_id", utils.middlewares.requireAuth, a
     }
 })
 
+router.get("/me", utils.middlewares.requireAuth, async (req, res) => {
+    try {
+        const user = await schema.user.findOne({ token: req.headers.authorization?.split(" ")[1] })
+        res.json(user)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
+
+router.get("/me/liked", utils.middlewares.requireAuth, async (req, res) => {
+    try {
+        const user = await schema
+            .user
+            .findOne({ token: req.headers.authorization?.split(" ")[1] })
+            .populate("liked")
+            .exec()
+        res.json(user?.liked)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
+
+router.get("/me/pets", utils.middlewares.requireAuth, async (req, res) => {
+    try {
+        const user = await schema.user.findOne({ token: req.headers.authorization?.split(" ")[1] })
+        const pets = await schema.pet.find({ ownerID: user?._id })
+        res.json(pets)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
 
 export default router

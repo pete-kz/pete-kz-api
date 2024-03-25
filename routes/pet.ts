@@ -66,6 +66,8 @@ router.get("/recommendations", async (req, res) => {
     const page = parseInt(req.query.page as string) || 1 // Default to page 1 if not specified
     const limit = parseInt(req.query.limit as string) || 10 // Default to 10 items per page if not specified
     
+    /* APPLYING FILTERS */
+
     // Extract and sanitize query parameters
     const { type, sterilized, sex, weight, owner_type } = req.query as {[key:string]:string | undefined}
     const filters: Filter = {} // TypeScript type annotation use 'const filters = {}' if not using TypeScript
@@ -76,8 +78,12 @@ router.get("/recommendations", async (req, res) => {
     if (weight) filters.weight = parseInt(weight as string) // Convert weight to integer, assuming direct comparison
     if (owner_type) filters.owner_type = owner_type
 
+    /* FILTERING OUT LIKED BY USER OR OWNED BY THEM (IF POSSIBLE) */
+    const authorizationHeader = req.headers["authorization"]
+
     try {
-        const pets = await utils.getPaginatedSortedPets(filters, page, limit)
+        // getPaginatedSortedPets is a utility function that fetches pets from the database
+        const pets = await utils.getPaginatedSortedPets(filters, page, limit, authorizationHeader)
         res.json(pets) 
     } catch (err) {
         console.error(err)
