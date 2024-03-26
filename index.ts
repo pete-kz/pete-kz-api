@@ -77,11 +77,13 @@ const db = mongoose.connection
 import userRoute from "./routes/user"
 import petRoute from "./routes/pet"
 import authRoute from "./routes/auth"
+import meRoute from "./routes/me"
 
 // express routes setup
 app.use("/pets", petRoute)
 app.use("/users", userRoute)
 app.use("/auth", authRoute)
+app.use("/me", meRoute)
 
 app.get("/healthcheck", async (req, res) => {
   res.status(200).send("OK")
