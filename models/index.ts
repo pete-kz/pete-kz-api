@@ -9,10 +9,12 @@ const petSchema = new Schema({
     sterilized: { type: Boolean },
     sex: { type: String, enum: ["male", "female"] },
     weight: { type: Number, default: 0 },
+    breed: { type: String, default: "" },
     description: { type: String, default: "" }, 
     ownerID: { type: Schema.Types.ObjectId, ref: "User" },
     imagesPath: [{ type: String }],
     city: { type: String },
+    price: { type: Number, default: 0 },
 }, { timestamps: true })
 type petSchema = InferSchemaType<typeof petSchema>
 
@@ -20,8 +22,10 @@ type petSchema = InferSchemaType<typeof petSchema>
 const userSchema = new Schema({
     companyName: { type: String, default: "" },
     address: { type: String, default: "" },
+    showAddress: { type: Boolean, default: false },
     firstName: { type: String },
     lastName: { type: String },
+    aboutMe: { type: String },
     phone: { type: String, unique: true },
     type: { type: String, enum: ["private", "shelter", "breeder", "nursery"], default: "private" }, 
     social: {

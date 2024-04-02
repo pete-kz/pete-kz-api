@@ -62,14 +62,35 @@ const processImagesAndUpload: (req: Request, res: Response, next: NextFunction) 
         })
 }
 
+router.get("/breeds", async (req, res) => {
+    // Fetch all breeds from database divided by pet type
+    try {
+        const pets = await schema.pet.find({})
+        const breeds: { [key: string]: string[] } = {}
+        for (let i = 0; i < pets.length; i++) {
+            const pet = pets[i]
+            if (!breeds[pet.type as string]) {
+                breeds[pet.type as string] = []
+            }
+            if (!breeds[pet.type as string].includes(pet.breed)) {
+                breeds[pet.type as string].push(pet.breed)
+            }
+        }
+        res.json(breeds)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
+
 router.get("/recommendations", async (req, res) => {
     const page = parseInt(req.query.page as string) || 1 // Default to page 1 if not specified
     const limit = parseInt(req.query.limit as string) || 10 // Default to 10 items per page if not specified
-    
+
     /* APPLYING FILTERS */
 
     // Extract and sanitize query parameters
-    const { type, sterilized, sex, weight, owner_type } = req.query as {[key:string]:string | undefined}
+    const { type, sterilized, sex, weight, owner_type } = req.query as { [key: string]: string | undefined }
     const filters: Filter = {} // TypeScript type annotation use 'const filters = {}' if not using TypeScript
 
     if (type) filters.type = type
@@ -84,7 +105,7 @@ router.get("/recommendations", async (req, res) => {
     try {
         // getPaginatedSortedPets is a utility function that fetches pets from the database
         const pets = await utils.getPaginatedSortedPets(filters, page, limit, authorizationHeader)
-        res.json(pets) 
+        res.json(pets)
     } catch (err) {
         console.error(err)
         res.status(500).json({ msg: "internal" })

@@ -9,7 +9,7 @@ import compression from "compression"
 config()
 
 const app = express()
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 8000
 let reqCount = 0
 let lastTime = Date.now()
 let totalRequestsPerMinute = 0
