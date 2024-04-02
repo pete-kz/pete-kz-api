@@ -15,6 +15,10 @@ const petSchema = new Schema({
     imagesPath: [{ type: String }],
     city: { type: String },
     price: { type: Number, default: 0 },
+    geolocation: {
+        latitude: { type: Number },
+        longitude: { type: Number }
+    }
 }, { timestamps: true })
 type petSchema = InferSchemaType<typeof petSchema>
 

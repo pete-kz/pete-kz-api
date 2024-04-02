@@ -113,7 +113,7 @@ router.get("/recommendations", async (req, res) => {
 })
 
 
-router.get("/find", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const pets = await schema.pet.find({})
         res.json(pets)
@@ -123,11 +123,33 @@ router.get("/find", async (req, res) => {
     }
 })
 
-router.get("/find/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
     const petID = req.params.id
     try {
         const pet = await schema.pet.findById(petID)
         res.json(pet)
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
+
+// Remove existing pet
+router.delete("/:id", utils.middlewares.requireAuth, async (req, res) => {
+    try {
+        await schema.pet.findByIdAndDelete(req.params.id)
+        res.json({ message: "Pet removed successfully" })
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({ msg: "internal" })
+    }
+})
+
+// Edit existing pet
+router.post("/:id", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
+    try {
+        const updatedPet = await schema.pet.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
+        res.json(updatedPet)
     } catch (err) {
         console.error(err)
         res.status(500).json({ msg: "internal" })
@@ -145,26 +167,6 @@ router.post("/add", utils.middlewares.requireAuth, upload.array("images"), proce
         })
 })
 
-// Remove existing pet
-router.delete("/remove/:id", utils.middlewares.requireAuth, async (req, res) => {
-    try {
-        await schema.pet.findByIdAndDelete(req.params.id)
-        res.json({ message: "Pet removed successfully" })
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ msg: "internal" })
-    }
-})
 
-// Edit existing pet
-router.post("/edit/:id", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
-    try {
-        const updatedPet = await schema.pet.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
-        res.json(updatedPet)
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ msg: "internal" })
-    }
-})
 
 export default router
