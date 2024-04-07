@@ -74,20 +74,11 @@ export default <utils>{
       const user = await schema.user.findOne({ token })
       // if user exists, filter pets from user's pets and liked pets
       if (user) {
-        allPets = allPets.filter(pet => pet.ownerID !== user._id)
-        allPets = allPets.filter(pet => !user.liked.includes(pet._id))
+        allPets = allPets.filter(pet => {
+          return pet.ownerID?.toString() !== user._id.toString()
+        })
       }
     }
-
-    // Initialize a map to count likes for each pet
-    const likesCount = new Map()
-
-    // Populate the map with the count of likes for each pet
-    allUsers.forEach(user => {
-      user.liked.forEach(petId => {
-        likesCount.set(petId, (likesCount.get(petId) || 0) + 1)
-      })
-    })
 
     function matchFilters(pet: petSchema) {
       if (filters.type && filters.type !== "" && pet.type !== filters.type) return false
@@ -102,6 +93,16 @@ export default <utils>{
     }
 
     const filteredPets = allPets.filter(matchFilters)
+
+    // Initialize a map to count likes for each pet
+    const likesCount = new Map()
+
+    // Populate the map with the count of likes for each pet
+    allUsers.forEach(user => {
+      user.liked.forEach(petId => {
+        likesCount.set(petId, (likesCount.get(petId) || 0) + 1)
+      })
+    })
 
     // Sort pets by likes (from most liked to least liked)
     const sortedPets = filteredPets.sort((a, b) => {

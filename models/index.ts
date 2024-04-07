@@ -24,18 +24,12 @@ type petSchema = InferSchemaType<typeof petSchema>
 
 // User's schema
 const userSchema = new Schema({
-    companyName: { type: String, default: "" },
-    address: { type: String, default: "" },
-    showAddress: { type: Boolean, default: false },
+    login: { type: String },
     firstName: { type: String },
     lastName: { type: String },
-    aboutMe: { type: String },
     phone: { type: String, unique: true },
-    type: { type: String, enum: ["private", "shelter", "breeder", "nursery"], default: "private" }, 
-    social: {
-        telegram: { type: String, default: "" },
-        instagram: { type: String, default: "" },
-    },
+    type: { type: String, enum: ["private", "shelter", "breeder"], default: "private" }, 
+    instagram: { type: String, default: "" },
     password: { type: String, default: "" },
     liked: { type: [{ type: Schema.Types.ObjectId, ref: "Pet" }], default: [] },
     token: { type: String, default: "" },

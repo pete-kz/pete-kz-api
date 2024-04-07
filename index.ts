@@ -81,9 +81,10 @@ import meRoute from "./routes/me"
 
 // express routes setup
 app.use("/pets", petRoute)
+app.use("/users/me", meRoute)
 app.use("/users", userRoute)
 app.use("/auth", authRoute)
-app.use("/me", meRoute)
+
 
 app.get("/healthcheck", async (req, res) => {
   res.status(200).send("OK")
