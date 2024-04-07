@@ -9,7 +9,7 @@ import compression from "compression"
 config()
 
 const app = express()
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 8000
 let reqCount = 0
 let lastTime = Date.now()
 let totalRequestsPerMinute = 0
@@ -77,11 +77,14 @@ const db = mongoose.connection
 import userRoute from "./routes/user"
 import petRoute from "./routes/pet"
 import authRoute from "./routes/auth"
+import meRoute from "./routes/me"
 
 // express routes setup
 app.use("/pets", petRoute)
+app.use("/users/me", meRoute)
 app.use("/users", userRoute)
 app.use("/auth", authRoute)
+
 
 app.get("/healthcheck", async (req, res) => {
   res.status(200).send("OK")
