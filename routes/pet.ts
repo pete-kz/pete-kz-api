@@ -123,6 +123,18 @@ router.get("/", async (req, res) => {
     }
 })
 
+// Add new pet
+router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
+    const newPet = new schema.pet(req.body)
+    newPet.save()
+        .then(docs => res.json(docs))
+        .catch(err => {
+            console.error(err)
+            res.status(500).json({ msg: "internal" })
+        })
+})
+
+
 router.get("/:id", async (req, res) => {
     const petID = req.params.id
     try {
@@ -156,16 +168,6 @@ router.post("/:id", utils.middlewares.requireAuth, upload.array("images"), proce
     }
 })
 
-// Add new pet
-router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
-    const newPet = new schema.pet(req.body)
-    newPet.save()
-        .then(docs => res.json(docs))
-        .catch(err => {
-            console.error(err)
-            res.status(500).json({ msg: "internal" })
-        })
-})
 
 
 
