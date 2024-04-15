@@ -29,11 +29,12 @@ router.post("/register", limit({
 
         // Create new user
         const userNew = new schema.user({
-            companyName: req.body.companyName,
+            login: req.body.login,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             phone: req.body.phone,
             type: req.body.type,
+            instagram: req.body.instagram,
             password: hash
         })
 
