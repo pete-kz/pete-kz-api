@@ -4,6 +4,7 @@ import helmet from "helmet"
 import mongoose from "mongoose"
 import { config } from "dotenv"
 import passport from "./passport-config"
+import { WHSendMessage } from "./lib/utils"
 // @ts-expect-error it does not need declaration file
 import compression from "compression"
 config()
@@ -91,10 +92,13 @@ app.get("/healthcheck", async (req, res) => {
 })
 
 app.listen(port, () => {
+  WHSendMessage("info", "Started server")
   db.once("open", () => { // Remove the unused variable '_'
     console.log("Connected to MongoDB")
+    WHSendMessage("info", "Connected to MongoDB")
   })
   db.on("error", err => {
     console.error("Сonnection error:", err)
+    WHSendMessage("error", "Сonnection to MongoDB was unsuccessful", "```" + err + "```")
   })
 })

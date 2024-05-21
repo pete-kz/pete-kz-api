@@ -7,6 +7,7 @@ import { limit } from "express-limit"
 import bcrypt from "bcrypt"
 import passport from "passport"
 import { config } from "dotenv"
+import { WHSendMessage } from "../lib/utils"
 config()
 
 router.post("/register", limit({
@@ -39,10 +40,11 @@ router.post("/register", limit({
         })
 
         await userNew.save()
-
+        WHSendMessage("info", "New user registered", "```" + JSON.stringify(userNew) + "```")
         res.end()
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to register new user", "```" + err + "```")
         res.json({ msg: "internal" }).status(500)
     }
 })
@@ -72,6 +74,8 @@ router.post("/login", limit({
             userData.refreshToken = refreshToken
             await userData.save()
         }
+
+        WHSendMessage("info", "User logged in", "```" + JSON.stringify(user._id) + "```")
 
         res.json({
             token,

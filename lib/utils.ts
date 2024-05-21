@@ -2,6 +2,7 @@ import schema, { petSchema } from "../models/index"
 import validator from "validator"
 import jwt from "jsonwebtoken"
 import { NextFunction, Response, Request } from "express"
+import axios from "axios"
 export interface Filter {
   type?: string,
   sterilized?: boolean,
@@ -115,5 +116,33 @@ export default <utils>{
     const paginatedPets = sortedPets.slice(skip, skip + limit)
 
     return paginatedPets
+  }
+}
+
+export function WHSendMessage(type: "error" | "info", title: string, message?: string) {
+  const params = {
+    username: "[DEBUG] PETE API",
+    avatar_url: "https://pete.kz/icons/android/android-launchericon-512-512.png",
+    // content: `${type === "error" ? ":x: **Error**" : ":information_source: **Info**"}\n${message}`
+    embeds: [
+      {
+        title: type === "error" ? ":x: **Error**" : ":information_source: **Info**" + " - " + title,
+        description: message,
+        type: "rich",
+        color: type === "error" ? 0xFF0000 : 0x00FF00,
+        timestamp: new Date().toISOString()
+      }
+    ]
+  }
+
+  if (process.env.DISCORD_WEBHOOK_DEBUG_ENABLED === "true") {
+    axios.post(process.env.DISCORD_WEBHOOK_DEBUG ? process.env.DISCORD_WEBHOOK_DEBUG : "", params, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    .catch(error => {
+      console.error(error)
+    })
   }
 }

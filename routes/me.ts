@@ -2,7 +2,7 @@ import { Router } from "express"
 import bcrypt from "bcrypt"
 const router = Router()
 import schema from "../models/index"
-import utils from "../lib/utils"
+import utils, { WHSendMessage } from "../lib/utils"
 
 router.get("/", utils.middlewares.requireAuth, async (req, res) => {
     try {
@@ -33,9 +33,11 @@ router.post("/", utils.middlewares.requireAuth, async (req, res) => {
     }
 
     try {
+        WHSendMessage("info", "User updated", "```" + JSON.stringify(req.body.update) + "```")
         await schema.user.findOneAndUpdate({ token: req.headers.authorization?.split(" ")[1] }, req.body.update)
         res.end()
     } catch (err) {
+        WHSendMessage("error", "Failed to update user", "```" + err + "```")
         console.error(err)
         res.json({ msg: "internal" }).status(500)
     }

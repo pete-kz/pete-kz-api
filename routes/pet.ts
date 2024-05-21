@@ -4,7 +4,7 @@ import AWS from "aws-sdk"
 import sharp from "sharp"
 import dotenv from "dotenv"
 import schema from "../models/index"
-import utils, { Filter } from "../lib/utils"
+import utils, { Filter, WHSendMessage } from "../lib/utils"
 import { PutObjectRequest } from "aws-sdk/clients/s3"
 
 dotenv.config()
@@ -127,8 +127,12 @@ router.get("/", async (req, res) => {
 router.post("/add", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
     const newPet = new schema.pet(req.body)
     newPet.save()
-        .then(docs => res.json(docs))
+        .then(docs => {
+            WHSendMessage("info", "New pet added", "```" + JSON.stringify(docs) + "```")
+            res.json(docs)
+        })
         .catch(err => {
+            WHSendMessage("error", "Failed to add new pet", "```" + err + "```")
             console.error(err)
             res.status(500).json({ msg: "internal" })
         })
@@ -150,8 +154,10 @@ router.get("/:id", async (req, res) => {
 router.delete("/:id", utils.middlewares.requireAuth, async (req, res) => {
     try {
         await schema.pet.findByIdAndDelete(req.params.id)
+        WHSendMessage("info", "Pet removed", "```" + req.params.id + "```")
         res.json({ message: "Pet removed successfully" })
     } catch (err) {
+        WHSendMessage("error", "Failed to remove pet", "```" + err + "```")
         console.error(err)
         res.status(500).json({ msg: "internal" })
     }
@@ -161,8 +167,10 @@ router.delete("/:id", utils.middlewares.requireAuth, async (req, res) => {
 router.post("/:id", utils.middlewares.requireAuth, upload.array("images"), processImagesAndUpload, async (req, res) => {
     try {
         const updatedPet = await schema.pet.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
+        WHSendMessage("info", "Pet updated", "```" + JSON.stringify(req.params.id) + "```")
         res.json(updatedPet)
     } catch (err) {
+        WHSendMessage("error", "Failed to update pet", "```" + err + "```")
         console.error(err)
         res.status(500).json({ msg: "internal" })
     }
