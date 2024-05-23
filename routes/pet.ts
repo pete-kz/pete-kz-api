@@ -62,63 +62,35 @@ const processImagesAndUpload: (req: Request, res: Response, next: NextFunction) 
         })
 }
 
-router.get("/breeds", async (req, res) => {
-    // Fetch all breeds from database divided by pet type
-    try {
-        const pets = await schema.pet.find({})
-        const breeds: { [key: string]: string[] } = {}
-        for (let i = 0; i < pets.length; i++) {
-            const pet = pets[i]
-            if (!breeds[pet.type as string]) {
-                breeds[pet.type as string] = []
-            }
-            if (!breeds[pet.type as string].includes(pet.breed)) {
-                breeds[pet.type as string].push(pet.breed)
-            }
-        }
-        res.json(breeds)
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ msg: "internal" })
-    }
-})
-
-router.get("/recommendations", async (req, res) => {
-    const page = parseInt(req.query.page as string) || 1 // Default to page 1 if not specified
-    const limit = parseInt(req.query.limit as string) || 10 // Default to 10 items per page if not specified
-
-    /* APPLYING FILTERS */
-
-    // Extract and sanitize query parameters
-    const { type, sterilized, sex, weight, owner_type } = req.query as { [key: string]: string | undefined }
-    const filters: Filter = {} // TypeScript type annotation use 'const filters = {}' if not using TypeScript
-
-    if (type) filters.type = type
-    if (sterilized !== undefined) filters.sterilized = sterilized === "true" // Assuming boolean values are passed as 'true' or 'false' strings
-    if (sex) filters.sex = sex as "male" | "female" | undefined
-    if (weight) filters.weight = parseInt(weight as string) // Convert weight to integer, assuming direct comparison
-    if (owner_type) filters.owner_type = owner_type
-
-    /* FILTERING OUT LIKED BY USER OR OWNED BY THEM (IF POSSIBLE) */
-    const authorizationHeader = req.headers["authorization"]
-
-    try {
-        // getPaginatedSortedPets is a utility function that fetches pets from the database
-        const pets = await utils.getPaginatedSortedPets(filters, page, limit, authorizationHeader)
-        res.json(pets)
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ msg: "internal" })
-    }
-})
-
+// router.get("/breeds", async (req, res) => {
+//     // Fetch all breeds from database divided by pet type
+//     try {
+//         const pets = await schema.pet.find({})
+//         const breeds: { [key: string]: string[] } = {}
+//         for (let i = 0; i < pets.length; i++) {
+//             const pet = pets[i]
+//             if (!breeds[pet.type as string]) {
+//                 breeds[pet.type as string] = []
+//             }
+//             if (!breeds[pet.type as string].includes(pet.breed)) {
+//                 breeds[pet.type as string].push(pet.breed)
+//             }
+//         }
+//         res.json(breeds)
+//     } catch (err) {
+//         console.error(err)
+//         res.status(500).json({ msg: "internal" })
+//     }
+// })
 
 router.get("/", async (req, res) => {
     try {
         const pets = await schema.pet.find({})
+        WHSendMessage("info", "All pets fetched", "```" + `Total pets: ${pets.length}` + "```")
         res.json(pets)
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to fetch all pets", "```" + err + "```")
         res.status(500).json({ msg: "internal" })
     }
 })
@@ -143,9 +115,11 @@ router.get("/:id", async (req, res) => {
     const petID = req.params.id
     try {
         const pet = await schema.pet.findById(petID)
+        WHSendMessage("info", "Someone is looking at " + pet?.name, "```" + JSON.stringify(pet) + "```")
         res.json(pet)
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to fetch pet", "```" + err + "```")
         res.status(500).json({ msg: "internal" })
     }
 })

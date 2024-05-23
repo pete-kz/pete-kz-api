@@ -7,9 +7,11 @@ import utils, { WHSendMessage } from "../lib/utils"
 router.get("/", utils.middlewares.requireAuth, async (req, res) => {
     try {
         const user = await schema.user.findOne({ token: req.headers.authorization?.split(" ")[1] })
+        WHSendMessage("info", `${user?.firstName + " " + user?.lastName} is looking at their profile!`)
         res.json(user)
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to get user", "```" + err + "```")
         res.status(500).json({ msg: "internal" })
     }
 })
@@ -43,53 +45,15 @@ router.post("/", utils.middlewares.requireAuth, async (req, res) => {
     }
 })
 
-router.get("/liked", utils.middlewares.requireAuth, async (req, res) => {
-    try {
-        const user = await schema
-            .user
-            .findOne({ token: req.headers.authorization?.split(" ")[1] })
-            .populate("liked")
-            .exec()
-        res.json(user?.liked)
-    } catch (err) {
-        console.error(err)
-        res.status(500).json({ msg: "internal" })
-    }
-})
-
-router.delete("/liked/:pet_id/remove", utils.middlewares.requireAuth, async (req, res) => {
-    try {
-        const pet_id = req.params.pet_id
-
-        // Find the user document by token
-        const user = await schema.user.findOne({ token: req.headers.authorization?.split(" ")[1] })
-
-        if (!user) {
-            return res.json({ msg: "internal" }).status(500)
-        }
-
-        // Remove the pet_id from the liked array
-        user.liked = user.liked.filter(_petID => (_petID as unknown as string) != pet_id)
-
-        // Update the user document with the modified liked array
-        const updatedUser = await user.save()
-
-        // Respond with the updated user document
-        res.json(updatedUser)
-    } catch (err) {
-        // Handle any errors that occur during the process
-        console.error(err)
-        res.json({ msg: "internal" }).status(500)
-    }
-})
-
 router.get("/pets", utils.middlewares.requireAuth, async (req, res) => {
     try {
         const user = await schema.user.findOne({ token: req.headers.authorization?.split(" ")[1] })
         const pets = await schema.pet.find()
         res.json(pets.filter(pet => pet.ownerID?.toString() == user?._id.toString()))
+        WHSendMessage("info", `${user?.firstName + " " + user?.lastName} is looking at their pets!`)
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to get user's pets", "```" + err + "```")
         res.status(500).json({ msg: "internal" })
     }
 })

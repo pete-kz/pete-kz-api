@@ -1,6 +1,7 @@
 import { Router } from "express"
 const router = Router()
 import schema from "../models/index"
+import { WHSendMessage } from "../lib/utils"
 
 router.get("/", async (req, res) => {
     try {
@@ -19,9 +20,11 @@ router.get("/:id", async (req, res) => {
     }
     try {
         const user = await schema.user.findById(userID)
+        WHSendMessage("info", "Someone is looking at " + user?.firstName + " " + user?.lastName)
         res.json(user)
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to fetch user", "```" + err + "```")
         res.json({ msg: "internal" }).status(500)
     }
 })
@@ -34,9 +37,11 @@ router.get("/:id/pets", async (req, res) => {
             return res.status(404).json({ msg: "User not found" })
         }
         const pets = await schema.pet.find()
+        WHSendMessage("info", `Someone is looking at ${user?.firstName + " " + user?.lastName}'s pets`)
         res.json(pets.filter(pet => pet.ownerID?.toString() == userID))
     } catch (err) {
         console.error(err)
+        WHSendMessage("error", "Failed to get user's pets", "```" + err + "```")
         res.status(500).json({ msg: "internal" })
     }
 })
