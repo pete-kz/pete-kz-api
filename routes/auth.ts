@@ -65,13 +65,11 @@ router.post("/login", limit({
             phone: user.phone
         }
 
-        const token = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: "12h" })
-        const refreshToken = jwt.sign(updatedDocs, process.env.REFRESH_TOKEN_SECRET!, { expiresIn: "7d" })
+        const token = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: "1y" })
 
         const userData = await schema.user.findById(user._id)
         if (userData) {
             userData.token = token
-            userData.refreshToken = refreshToken
             await userData.save()
         }
 
@@ -79,7 +77,6 @@ router.post("/login", limit({
 
         res.json({
             token,
-            refreshToken,
             docs: updatedDocs
         })
     })(req, res, next)
