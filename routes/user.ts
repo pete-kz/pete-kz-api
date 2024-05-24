@@ -20,7 +20,6 @@ router.get("/:id", async (req, res) => {
     }
     try {
         const user = await schema.user.findById(userID)
-        WHSendMessage("info", "Someone is looking at " + user?.firstName + " " + user?.lastName)
         res.json(user)
     } catch (err) {
         console.error(err)
@@ -37,7 +36,7 @@ router.get("/:id/pets", async (req, res) => {
             return res.status(404).json({ msg: "User not found" })
         }
         const pets = await schema.pet.find()
-        WHSendMessage("info", `Someone is looking at ${user?.firstName + " " + user?.lastName}'s pets`)
+        WHSendMessage("info", `Someone is looking at ${user?.firstName + " " + user?.lastName}'s profile`)
         res.json(pets.filter(pet => pet.ownerID?.toString() == userID))
     } catch (err) {
         console.error(err)

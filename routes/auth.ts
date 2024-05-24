@@ -83,26 +83,4 @@ router.post("/login", limit({
 })
 
 
-router.post("/refresh", (req, res, next) => {
-    passport.authenticate("jwt-refresh", { session: false }, (err: Error, user: { _id: string; phone: string }) => {
-        if (err) return next(err)
-
-        if (!user) {
-            return res.status(400).json({ msg: "Invalid refresh token." })
-        }
-
-        const updatedDocs = {
-            _id: user._id,
-            phone: user.phone
-        }
-
-        const newToken = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: 12 * 60 * 60 * 1000 })
-
-        res.json({
-            token: newToken,
-        })
-    })(req, res, next)
-})
-
-
 export default router
