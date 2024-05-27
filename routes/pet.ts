@@ -4,7 +4,7 @@ import AWS from "aws-sdk"
 import sharp from "sharp"
 import dotenv from "dotenv"
 import schema from "../models/index"
-import utils, { Filter, WHSendMessage } from "../lib/utils"
+import utils, { WHSendMessage } from "../lib/utils"
 import { PutObjectRequest } from "aws-sdk/clients/s3"
 
 dotenv.config()
@@ -61,27 +61,6 @@ const processImagesAndUpload: (req: Request, res: Response, next: NextFunction) 
             res.status(500).json({ error: err })
         })
 }
-
-// router.get("/breeds", async (req, res) => {
-//     // Fetch all breeds from database divided by pet type
-//     try {
-//         const pets = await schema.pet.find({})
-//         const breeds: { [key: string]: string[] } = {}
-//         for (let i = 0; i < pets.length; i++) {
-//             const pet = pets[i]
-//             if (!breeds[pet.type as string]) {
-//                 breeds[pet.type as string] = []
-//             }
-//             if (!breeds[pet.type as string].includes(pet.breed)) {
-//                 breeds[pet.type as string].push(pet.breed)
-//             }
-//         }
-//         res.json(breeds)
-//     } catch (err) {
-//         console.error(err)
-//         res.status(500).json({ msg: "internal" })
-//     }
-// })
 
 router.get("/", async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import { Router } from "express"
 const router = Router()
-import schema from "../models"
+import schema, { userSchema } from "../models"
 import jwt from "jsonwebtoken"
 // @ts-expect-error no declaration file for express-limit
 import { limit } from "express-limit"
@@ -53,31 +53,36 @@ router.post("/login", limit({
     max: 5,
     period: 60 * 1000
 }), async (req, res, next) => {
-    passport.authenticate("local", { session: false }, async (err: Error, user: { _id: string; phone: string }, info: { message: string }) => {
+    passport.authenticate("local", { session: false }, async (err: Error, user: userSchema & { _id: string }, info: { message: string }) => {
         if (err) return next(err)
 
         if (!user) {
             return res.status(400).json({ msg: info.message })
         }
 
-        const updatedDocs = {
+        const userSigned = {
             _id: user._id,
-            phone: user.phone
+            login: user.login,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+            type: user.type,
+            instagram: user.instagram,
         }
 
-        const token = jwt.sign(updatedDocs, process.env.SECRET!, { expiresIn: "1y" })
+        const token = jwt.sign(userSigned, process.env.SECRET!, { expiresIn: "1y" })
 
-        const userData = await schema.user.findById(user._id)
+        const userData = await schema.user.findById(userSigned._id)
         if (userData) {
             userData.token = token
             await userData.save()
         }
 
-        WHSendMessage("info", "User logged in", "```" + JSON.stringify(user._id) + "```")
+        WHSendMessage("info", "User logged in", "```" + JSON.stringify(userSigned) + "```")
 
         res.json({
             token,
-            docs: updatedDocs
+            docs: userSigned
         })
     })(req, res, next)
 })
